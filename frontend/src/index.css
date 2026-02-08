@@ -1,0 +1,63 @@
+:root {
+    /* LoadLogic Theme Palette */
+    --bg-primary: #F3F8F3;
+    /* Light Mint/Grey - Main Background */
+    --bg-surface: #FFFFFF;
+    /* White - Cards & Sidebar */
+    --bg-secondary: #F9FAFB;
+    /* Very Light Grey - Secondary Backgrounds */
+
+    --text-primary: #1A1A1A;
+    /* Almost Black - Headings */
+    --text-secondary: #6B7280;
+    /* Cool Grey - Secondary Text */
+    --text-muted: #9CA3AF;
+    /* Light Grey - Disabled/Placeholder */
+
+    --accent-primary: #1A1A1A;
+    /* Black - Primary Actions/Active State */
+    --accent-hover: #333333;
+    /* Dark Grey - Hover State */
+    --accent-secondary: #E5E7EB;
+    /* Light Grey - Secondary Buttons */
+
+    --border-color: #E5E7EB;
+    /* Light Grey Border */
+    --border-radius: 16px;
+    /* Modern Rounded Corners */
+
+    --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.04);
+    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+
+    /* Original Variables Mapped for Backward Compatibility where possible */
+    --primary: var(--accent-primary);
+    --primary-hover: var(--accent-hover);
+    --bg-main: var(--bg-primary);
+    --bg-card: var(--bg-surface);
+    --text-main: var(--text-primary);
+    --border-light: var(--border-color);
+
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+
+    color-scheme: light;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+#root {
+    width: 100%;
+}

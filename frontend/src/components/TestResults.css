@@ -1,0 +1,139 @@
+.test-results-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+.test-results-content {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+    text-align: center;
+}
+
+.results-header {
+    margin-bottom: 32px;
+}
+
+.results-header h2 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-size: 28px;
+}
+
+.performance-badge {
+    display: inline-block;
+    color: white;
+    padding: 8px 24px;
+    border-radius: 24px;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.results-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.stat-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #999;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.stat-detail {
+    font-size: 13px;
+    color: #666;
+}
+
+.results-info {
+    background: #f0f7ff;
+    border-left: 4px solid #667eea;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: left;
+    margin-bottom: 32px;
+}
+
+.results-info h3 {
+    margin: 0 0 12px 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.results-info p {
+    margin: 0 0 16px 0;
+    color: #555;
+    line-height: 1.6;
+}
+
+.decay-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #ddd;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-label {
+    font-size: 13px;
+    color: #666;
+}
+
+.info-value {
+    font-weight: 700;
+    color: #333;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}

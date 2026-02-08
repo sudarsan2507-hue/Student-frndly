@@ -1,0 +1,50 @@
+/* App Global Overrides */
+/* Note: Most theme variables are now in index.css */
+
+:root {
+    /* Additional semantic colors if needed */
+    --sentiment-positive: #10B981;
+    --sentiment-negative: #EF4444;
+    --sentiment-warning: #F59E0B;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+        monospace;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--bg-hover);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(167, 139, 250, 0.3);
+}
+
+/* Selection */
+::selection {
+    background: rgba(167, 139, 250, 0.3);
+    color: var(--text-primary);
+}

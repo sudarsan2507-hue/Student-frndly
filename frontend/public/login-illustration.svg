@@ -1,0 +1,76 @@
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circles for decoration -->
+  <circle cx="100" cy="100" r="40" fill="#90EE90" opacity="0.2"/>
+  <circle cx="400" cy="150" r="35" fill="#90EE90" opacity="0.2"/>
+  <circle cx="420" cy="350" r="30" fill="#90EE90" opacity="0.2"/>
+  
+  <!-- Meditation person -->
+  <g transform="translate(250, 280)">
+    <!-- Body (green shirt with heart) -->
+    <ellipse cx="0" cy="20" rx="80" ry="60" fill="#90EE90"/>
+    
+    <!-- Heart on shirt -->
+    <g transform="translate(0, 15)">
+      <path d="M-8,-5 Q-8,-12 -3,-12 Q0,-12 0,-8 Q0,-12 3,-12 Q8,-12 8,-5 Q8,2 0,8 Q-8,2 -8,-5 Z" fill="white"/>
+    </g>
+    
+    <!-- Head -->
+    <circle cx="0" cy="-30" r="35" fill="#FFE4C4"/>
+    
+    <!-- Hair -->
+    <ellipse cx="0" cy="-45" rx="38" ry="25" fill="#2C2C2C"/>
+    
+    <!-- Eyes (closed, peaceful) -->
+    <path d="M-12,-30 Q-8,-28 -4,-30" stroke="#2C2C2C" stroke-width="2" fill="none"/>
+    <path d="M4,-30 Q8,-28 12,-30" stroke="#2C2C2C" stroke-width="2" fill="none"/>
+    
+    <!-- Smile -->
+    <path d="M-10,-18 Q0,-14 10,-18" stroke="#2C2C2C" stroke-width="2" fill="none"/>
+    
+    <!-- Arms in meditation pose -->
+    <ellipse cx="-60" cy="30" rx="15" ry="40" fill="#90EE90" transform="rotate(-20 -60 30)"/>
+    <ellipse cx="60" cy="30" rx="15" ry="40" fill="#90EE90" transform="rotate(20 60 30)"/>
+    
+    <!-- Hands -->
+    <circle cx="-50" cy="50" r="12" fill="#FFE4C4"/>
+    <circle cx="50" cy="50" r="12" fill="#FFE4C4"/>
+    
+    <!-- Legs (lotus position) -->
+    <ellipse cx="-40" cy="70" rx="50" ry="20" fill="#4169E1"/>
+    <ellipse cx="40" cy="70" rx="50" ry="20" fill="#4169E1"/>
+  </g>
+  
+  <!-- Floating connection lines -->
+  <path d="M100,100 Q150,120 200,180" stroke="#90EE90" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M400,150 Q350,180 300,200" stroke="#90EE90" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M420,350 Q380,330 320,310" stroke="#90EE90" stroke-width="2" fill="none" opacity="0.6"/>
+  
+  <!-- Floating avatars -->
+  <g transform="translate(100, 100)">
+    <circle r="25" fill="white"/>
+    <circle r="20" fill="#FFE4C4"/>
+    <circle cy="-8" r="12" fill="#8B4513"/>
+  </g>
+  
+  <g transform="translate(400, 150)">
+    <circle r="25" fill="white"/>
+    <circle r="20" fill="#FFE4C4"/>
+    <circle cy="-8" r="12" fill="#2C2C2C"/>
+  </g>
+  
+  <g transform="translate(420, 350)">
+    <circle r="25" fill="white"/>
+    <circle r="20" fill="#FFE4C4"/>
+    <circle cy="-8" r="12" fill="#DAA520"/>
+  </g>
+  
+  <!-- Task bubble -->
+  <g transform="translate(180, 120)">
+    <rect x="0" y="0" width="140" height="60" rx="10" fill="white" stroke="#E0E0E0" stroke-width="2"/>
+    <text x="15" y="25" font-family="Arial" font-size="14" font-weight="bold">Canva Design</text>
+    <text x="15" y="45" font-family="Arial" font-size="12" fill="#666">10 Task</text>
+    <rect x="110" y="15" width="20" height="12" rx="6" fill="#90EE90"/>
+    <rect x="15" y="50" width="50" height="18" rx="9" fill="#E8F5E9"/>
+    <text x="20" y="63" font-family="Arial" font-size="11" fill="#4CAF50">Design</text>
+  </g>
+</svg>
