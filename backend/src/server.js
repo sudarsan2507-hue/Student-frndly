@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 
 // Import storage
 import InMemoryStorage from './storage/inMemoryStorage.js';
+import noteStorage from './storage/noteStorage.js';
 
 // Import services
 import AuthService from './services/authService.js';
@@ -19,6 +20,7 @@ import QuickTestController from './controllers/quickTestController.js';
 
 import KnowledgeController from './controllers/knowledgeController.js';
 import CalendarController from './controllers/calendarController.js';
+import NoteController from './controllers/noteController.js';
 
 // Import routes
 import createAuthRoutes from './routes/authRoutes.js';
@@ -26,6 +28,7 @@ import createSkillRoutes from './routes/skillRoutes.js';
 import createQuickTestRoutes from './routes/quickTestRoutes.js';
 import createKnowledgeRoutes from './routes/knowledgeRoutes.js';
 import createCalendarRoutes from './routes/calendarRoutes.js';
+import createNoteRoutes from './routes/noteRoutes.js';
 
 // Import middleware
 import createAuthMiddleware from './middleware/authMiddleware.js';
@@ -53,6 +56,7 @@ const skillController = new SkillController(skillService);
 const quickTestController = new QuickTestController(quickTestService);
 const calendarController = new CalendarController(calendarService);
 const knowledgeController = new KnowledgeController(knowledgeService);
+const noteController = new NoteController();
 
 // Initialize middleware
 export const authMiddleware = createAuthMiddleware(storage);
@@ -68,6 +72,7 @@ app.use('/api/skills', createSkillRoutes(skillController, authMiddleware));
 app.use('/api/quick-test', createQuickTestRoutes(quickTestController, authMiddleware));
 app.use('/api/knowledge', createKnowledgeRoutes(knowledgeController, authMiddleware));
 app.use('/api/calendar', createCalendarRoutes(calendarController, authMiddleware));
+app.use('/api/notes', createNoteRoutes(noteController, authMiddleware));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -81,6 +86,7 @@ app.use(errorHandler);
 const startServer = async () => {
     try {
         await storage.initialize();
+        await noteStorage.initialize();
 
         app.listen(PORT, () => {
             console.log(`✓ Server running on http://localhost:${PORT}`);

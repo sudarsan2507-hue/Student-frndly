@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import calendarService from '../services/calendarService';
 import skillService from '../services/skillService';
+import PersonalNotes from '../components/PersonalNotes';
 import './Calendar.css';
 
 const Calendar = () => {
@@ -18,6 +19,9 @@ const Calendar = () => {
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedSkillId, setSelectedSkillId] = useState('');
     const [submitting, setSubmitting] = useState(false);
+
+    // Track selected date for notes panel (separate from modal)
+    const [selectedDateForNotes, setSelectedDateForNotes] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -64,7 +68,9 @@ const Calendar = () => {
     };
 
     const handleDateClick = (dateString) => {
+        console.log('Selected date:', dateString);
         setSelectedDate(dateString);
+        setSelectedDateForNotes(dateString); // Update notes panel
         setShowModal(true);
         setSelectedSkillId(''); // Reset selection
     };
@@ -153,6 +159,7 @@ const Calendar = () => {
                             <div
                                 key={index}
                                 className={`day-cell ${date ? '' : 'empty'} ${date && date.toDateString() === new Date().toDateString() ? 'today' : ''
+                                    } ${date && selectedDateForNotes && date.toISOString().split('T')[0] === selectedDateForNotes ? 'selected' : ''
                                     }`}
                                 onClick={() => date && handleDateClick(date.toISOString().split('T')[0])}
                             >
@@ -167,23 +174,29 @@ const Calendar = () => {
                     </div>
 
                     {/* Recent Activity List (Below grid) */}
-                    <div className="events-list">
-                        <h3>Upcoming & Recent</h3>
-                        {events.slice(0, 5).map(event => (
-                            <div key={event.id} className="event-item">
-                                <div className="event-date">
-                                    {new Date(event.date).toLocaleDateString()}
+                    <div className="calendar-bottom-section">
+                        <div className="events-list">
+                            <h3>Upcoming & Recent</h3>
+                            {events.slice(0, 5).map(event => (
+                                <div key={event.id} className="event-item">
+                                    <div className="event-date">
+                                        {new Date(event.date).toLocaleDateString()}
+                                    </div>
+                                    <div className="event-info">
+                                        <span className={`event-badge ${event.type}`}>{event.type}</span>
+                                        <span className="event-title">{event.title}</span>
+                                    </div>
+                                    {event.score !== undefined && (
+                                        <div className="event-score">Score: {event.score}%</div>
+                                    )}
                                 </div>
-                                <div className="event-info">
-                                    <span className={`event-badge ${event.type}`}>{event.type}</span>
-                                    <span className="event-title">{event.title}</span>
-                                </div>
-                                {event.score !== undefined && (
-                                    <div className="event-score">Score: {event.score}%</div>
-                                )}
-                            </div>
-                        ))}
-                        {events.length === 0 && <p className="no-events">No activity recorded yet.</p>}
+                            ))}
+                            {events.length === 0 && <p className="no-events">No activity recorded yet.</p>}
+                        </div>
+
+                        <div className="notes-panel">
+                            <PersonalNotes selectedDate={selectedDateForNotes} />
+                        </div>
                     </div>
                 </>
             )}

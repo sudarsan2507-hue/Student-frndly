@@ -104,6 +104,16 @@
     background: #eef2ff;
 }
 
+.day-cell.selected {
+    border: 2px solid #10b981;
+    background: #d1fae5;
+}
+
+.day-cell.selected .day-number {
+    color: #059669;
+    font-weight: 700;
+}
+
 .day-number {
     font-size: 14px;
     color: #64748b;
@@ -233,6 +243,20 @@
     box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3);
 }
 
+/* Bottom Section Layout */
+.calendar-bottom-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 40px;
+}
+
+@media (max-width: 968px) {
+    .calendar-bottom-section {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* List */
 .events-list {
     background: white;
@@ -240,6 +264,10 @@
     padding: 24px;
     border: 1px solid #f1f5f9;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.notes-panel {
+    min-height: 400px;
 }
 
 .events-list h3 {

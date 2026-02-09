@@ -97,7 +97,12 @@ const Login = () => {
                         </div>
 
                         <div className="form-group password-group">
-                            <label htmlFor="password">Password</label>
+                            <div className="password-label-row">
+                                <label htmlFor="password">Password</label>
+                                <a href="#" className="forgot-password">
+                                    Forgot Password?
+                                </a>
+                            </div>
                             <input
                                 type="password"
                                 id="password"
@@ -107,9 +112,6 @@ const Login = () => {
                                 disabled={loading}
                                 autoComplete="current-password"
                             />
-                            <a href="#" className="forgot-password">
-                                Forgot Password?
-                            </a>
                         </div>
 
                         <button
@@ -121,7 +123,7 @@ const Login = () => {
                         </button>
                     </form>
 
-                    <div className="divider">or continue with</div>
+                    <div className="divider"></div>
 
                     <div className="social-login">
                         <button
