@@ -26,6 +26,7 @@ const Dashboard = () => {
     const [skills, setSkills] = useState([]);
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -66,6 +67,54 @@ const Dashboard = () => {
     // Derived state
     const weakSkills = skills.filter(s => s.currentStrength < 40).length;
     const masteredSkills = skills.filter(s => s.currentStrength >= 80).length;
+
+    // Render mini calendar for dashboard
+    const renderMiniCalendar = () => {
+        const today = new Date();
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+
+        // Get first day of month and total days
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+        // Adjust for Monday start (0 = Sunday, we want Monday = 0)
+        const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+
+        const days = [];
+
+        // Previous month days
+        for (let i = startOffset - 1; i >= 0; i--) {
+            days.push(<span key={`prev-${i}`} className="muted">{daysInPrevMonth - i}</span>);
+        }
+
+        // Current month days
+        for (let day = 1; day <= daysInMonth; day++) {
+            const isToday =
+                day === today.getDate() &&
+                month === today.getMonth() &&
+                year === today.getFullYear();
+
+            days.push(
+                <span key={`curr-${day}`} className={isToday ? 'active' : ''}>
+                    {day}
+                </span>
+            );
+        }
+
+        // Create rows of 7 days
+        const rows = [];
+        for (let i = 0; i < days.length; i += 7) {
+            rows.push(
+                <div key={`row-${i}`} className="cal-row">
+                    {days.slice(i, i + 7)}
+                </div>
+            );
+        }
+
+        return rows;
+    };
 
     const getStrengthColor = (strength) => {
         if (strength >= 80) return '#10b981'; // Green
@@ -200,22 +249,14 @@ const Dashboard = () => {
                                 style={{ cursor: 'pointer' }}
                             >
                                 <div className="widget-header">
-                                    <h3>February 2026</h3>
+                                    <h3>{currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
                                     <button className="btn-icon" onClick={(e) => { e.stopPropagation(); navigate('/calendar'); }}>→</button>
                                 </div>
                                 <div className="mini-calendar-grid">
                                     <div className="cal-row header">
                                         <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
                                     </div>
-                                    <div className="cal-row">
-                                        <span className="muted">29</span><span className="muted">30</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
-                                    </div>
-                                    <div className="cal-row">
-                                        <span>6</span><span>7</span><span>8</span><span className="active">9</span><span>10</span><span>11</span><span>12</span>
-                                    </div>
-                                    <div className="cal-row">
-                                        <span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span>
-                                    </div>
+                                    {renderMiniCalendar()}
                                 </div>
                             </motion.div>
 
