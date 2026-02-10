@@ -52,6 +52,7 @@ const DashboardLayout = ({ children }) => {
 const getPageTitle = (pathname) => {
     if (pathname.includes('/skills')) return 'My Skills';
     if (pathname.includes('/knowledge')) return 'Knowledge Tracker';
+    if (pathname.includes('/calendar')) return 'Calendar & Notes';
     if (pathname.includes('/dashboard')) return 'Dashboard';
     return 'Skill Tracker';
 };

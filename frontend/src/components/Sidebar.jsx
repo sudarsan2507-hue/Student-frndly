@@ -9,7 +9,8 @@ const Sidebar = () => {
     const menuItems = [
         { path: '/dashboard', icon: '📊', label: 'Dashboard' },
         { path: '/skills', icon: '🎯', label: 'Skills' },
-        { path: '/knowledge', icon: '🧠', label: 'Knowledge' }
+        { path: '/knowledge', icon: '🧠', label: 'Knowledge' },
+        { path: '/calendar', icon: '📅', label: 'Calendar' }
     ];
 
     const isActive = (path) => location.pathname === path;

@@ -298,11 +298,18 @@
 
 /* Calendar Widget */
 .calendar-widget {
-    background: var(--bg-surface);
-    padding: 24px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-card);
-    border: 1px solid var(--border-color);
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    transition: all 0.2s;
+}
+
+.calendar-widget.clickable:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border-color: #e2e8f0;
 }
 
 .mini-calendar-grid {
@@ -351,6 +358,13 @@
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-card);
     border: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.notes-widget.clickable:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border-color: #e2e8f0;
 }
 
 .notes-list {

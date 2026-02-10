@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import skillService from '../services/skillService';
+import noteService from '../services/noteService';
 import PageTransition from '../components/PageTransition';
 import { motion } from 'framer-motion';
 import './Dashboard.css';
@@ -23,11 +24,13 @@ const itemVariants = {
 const Dashboard = () => {
     const navigate = useNavigate();
     const [skills, setSkills] = useState([]);
+    const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
         loadSkills();
+        loadTodayNotes();
     }, []);
 
     const loadSkills = async () => {
@@ -40,6 +43,17 @@ const Dashboard = () => {
             setError(err.response?.data?.message || 'Failed to load skills');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadTodayNotes = async () => {
+        try {
+            const today = new Date();
+            const dateString = today.toISOString().split('T')[0];
+            const response = await noteService.getNotes(dateString);
+            setNotes(response.data || []);
+        } catch (err) {
+            console.error('Failed to load today\'s notes:', err);
         }
     };
 
@@ -179,10 +193,15 @@ const Dashboard = () => {
                         <div className="dashboard-right-sidebar">
 
                             {/* Calendar Widget */}
-                            <motion.div className="calendar-widget" variants={itemVariants}>
+                            <motion.div
+                                className="calendar-widget clickable"
+                                variants={itemVariants}
+                                onClick={() => navigate('/calendar')}
+                                style={{ cursor: 'pointer' }}
+                            >
                                 <div className="widget-header">
                                     <h3>February 2026</h3>
-                                    <button className="btn-icon">→</button>
+                                    <button className="btn-icon" onClick={(e) => { e.stopPropagation(); navigate('/calendar'); }}>→</button>
                                 </div>
                                 <div className="mini-calendar-grid">
                                     <div className="cal-row header">
@@ -192,7 +211,7 @@ const Dashboard = () => {
                                         <span className="muted">29</span><span className="muted">30</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
                                     </div>
                                     <div className="cal-row">
-                                        <span>6</span><span className="active">7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
+                                        <span>6</span><span>7</span><span>8</span><span className="active">9</span><span>10</span><span>11</span><span>12</span>
                                     </div>
                                     <div className="cal-row">
                                         <span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span>
@@ -201,15 +220,35 @@ const Dashboard = () => {
                             </motion.div>
 
                             {/* Recent Activity / Personal Notes */}
-                            <motion.div className="notes-widget" variants={itemVariants}>
+                            <motion.div
+                                className="notes-widget clickable"
+                                variants={itemVariants}
+                                onClick={() => navigate('/calendar')}
+                                style={{ cursor: 'pointer' }}
+                            >
                                 <div className="widget-header">
-                                    <h3>Personal Notes</h3>
+                                    <h3>Today's Notes</h3>
                                 </div>
-                                <ul className="notes-list">
-                                    <li>Check Official IELTS Practice Materials Volume 2</li>
-                                    <li>C1 English (Advanced) - prepare new materials</li>
-                                    <li>Business English vocabulary study</li>
-                                </ul>
+                                {notes.length === 0 ? (
+                                    <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
+                                        No notes for today<br />
+                                        <small>Click to add notes</small>
+                                    </div>
+                                ) : (
+                                    <ul className="notes-list">
+                                        {notes.slice(0, 3).map((note, index) => (
+                                            <li key={note.id || index}>
+                                                {note.content.length > 60
+                                                    ? note.content.substring(0, 60) + '...'
+                                                    : note.content
+                                                }
+                                            </li>
+                                        ))}
+                                        {notes.length > 3 && (
+                                            <li style={{ color: '#6366f1', fontWeight: '500' }}>+{notes.length - 3} more</li>
+                                        )}
+                                    </ul>
+                                )}
                             </motion.div>
 
                             {/* Documents/Files Widget */}
