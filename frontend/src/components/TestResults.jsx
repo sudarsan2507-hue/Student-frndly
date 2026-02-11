@@ -29,14 +29,14 @@ const TestResults = ({ results, skill, onClose }) => {
                             {results.accuracy}%
                         </div>
                         <div className="stat-detail">
-                            {results.correctCount} of {results.totalQuestions} correct
+                            {results.correctCount !== undefined ? results.correctCount : results.score} of {results.totalQuestions} correct
                         </div>
                     </div>
 
                     <div className="stat-card">
                         <div className="stat-label">Avg Time</div>
                         <div className="stat-value">
-                            {results.responseTime.toFixed(1)}s
+                            {(results.responseTime || results.averageTimePerQuestion || 0).toFixed(1)}s
                         </div>
                         <div className="stat-detail">per question</div>
                     </div>

@@ -94,6 +94,7 @@ const SkillList = () => {
             await skillService.markAsPracticed(skillId);
             await loadSkills(); // Refresh to show new date/strength
         } catch (err) {
+            console.error("Mark as practiced error:", err);
             if (err.response?.status === 404 && err.response?.data?.message?.includes('not found')) {
                 await loadSkills();
                 alert('Skills refreshed. Please try again.');
@@ -432,7 +433,8 @@ const SkillList = () => {
             {/* Test Results Modal */}
             {testResults && (
                 <TestResults
-                    results={testResults}
+                    results={testResults.results}
+                    skill={testResults.skill}
                     onClose={handleCloseResults}
                 />
             )}

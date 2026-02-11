@@ -100,6 +100,7 @@ class SkillController {
                 data: skill
             });
         } catch (error) {
+            console.error('Error in markAsPracticed:', error);
             if (error.message.includes('Unauthorized')) {
                 return res.status(403).json({
                     success: false,

@@ -59,11 +59,15 @@ const QuickTest = ({ skill, onComplete, onClose }) => {
 
         try {
             const totalTime = Math.floor((Date.now() - startTime) / 1000);
+            console.log("Submitting test:", { testId: test.id, answers, totalTime });
+
             const response = await quickTestService.submitTest(test.id, answers, totalTime);
+            console.log("Submission response:", response);
 
             // Call onComplete with results
             onComplete(response.data);
         } catch (err) {
+            console.error("Submission error:", err);
             setError(err.response?.data?.message || 'Failed to submit test');
             setSubmitting(false);
         }

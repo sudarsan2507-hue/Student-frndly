@@ -2,6 +2,7 @@ import DataAccess from './dataAccess.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -124,8 +125,8 @@ class InMemoryStorage extends DataAccess {
     async createSkill(skillData) {
         if (!this.initialized) await this.initialize();
         const newSkill = {
-            id: String(Date.now()),
             ...skillData,
+            id: String(Date.now()),
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
@@ -180,8 +181,8 @@ class InMemoryStorage extends DataAccess {
     async createQuickTest(testData) {
         if (!this.initialized) await this.initialize();
         const newTest = {
-            id: String(Date.now() + Math.random()),
             ...testData,
+            id: crypto.randomUUID(),
             createdAt: new Date().toISOString()
         };
         this.quickTests.push(newTest);
