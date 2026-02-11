@@ -79,11 +79,14 @@ const Calendar = () => {
         e.preventDefault();
         if (!selectedSkillId || !selectedDate) return;
 
+        console.log("Scheduling skillId:", selectedSkillId);
+
         setSubmitting(true);
         try {
             await calendarService.scheduleSession(selectedSkillId, selectedDate);
             setShowModal(false);
             await loadData(); // Refresh events
+            alert('Practice scheduled successfully');
         } catch (err) {
             alert(err.response?.data?.message || 'Failed to schedule session');
         } finally {

@@ -55,9 +55,16 @@ class CalendarService {
      * Schedule a future practice session
      */
     async scheduleSession(userId, skillId, date) {
-        const skill = await this.storage.findSkillById(skillId);
-        if (!skill) throw new Error('Skill not found');
-        if (skill.userId !== userId) throw new Error('Unauthorized');
+        // Fetch all skills for the user to validate ownership properly
+        const skills = await this.storage.findSkillsByUserId(userId);
+
+        console.log("Received skillId:", skillId);
+        console.log("Available skills:", skills.map(s => s.id));
+
+        const skill = skills.find(s => s.id === skillId);
+        if (!skill) {
+            throw new Error('Skill not found');
+        }
 
         return this.storage.createCalendarEvent({
             userId,

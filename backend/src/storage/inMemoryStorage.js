@@ -251,7 +251,7 @@ class InMemoryStorage extends DataAccess {
     async createCalendarEvent(eventData) {
         if (!this.initialized) await this.initialize();
         const newEvent = {
-            id: String(Date.now() + Math.random()),
+            id: crypto.randomUUID(),
             ...eventData,
             createdAt: new Date().toISOString()
         };
