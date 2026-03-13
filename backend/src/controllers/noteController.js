@@ -1,11 +1,9 @@
-import noteStorage from '../storage/noteStorage.js';
-
 /**
  * Note controller
  * Handles HTTP requests for personal note management
  */
 class NoteController {
-    constructor() {
+    constructor(noteStorage) {
         this.noteStorage = noteStorage;
     }
 

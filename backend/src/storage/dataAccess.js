@@ -83,6 +83,40 @@ class DataAccess {
     async deleteQuickTest(id) {
         throw new Error('Method not implemented');
     }
+
+    // Calendar Event operations
+    async createCalendarEvent(eventData) {
+        throw new Error('Method not implemented');
+    }
+
+    async findCalendarEventsByUserId(userId) {
+        throw new Error('Method not implemented');
+    }
+
+    async deleteCalendarEvent(id) {
+        throw new Error('Method not implemented');
+    }
+
+    // Personal Note operations
+    async createNote(noteData) {
+        throw new Error('Method not implemented');
+    }
+
+    async findNotesByUserId(userId, dateFilter) {
+        throw new Error('Method not implemented');
+    }
+
+    async findNoteById(id) {
+        throw new Error('Method not implemented');
+    }
+
+    async updateNote(id, updates) {
+        throw new Error('Method not implemented');
+    }
+
+    async deleteNote(id) {
+        throw new Error('Method not implemented');
+    }
 }
 
 export default DataAccess;

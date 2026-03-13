@@ -10,97 +10,100 @@ class KnowledgeService {
     }
 
     /**
-     * Get knowledge overview for a user
-     * Combines skills with their recent test history and decay trends
+     * Get knowledge overview for a user.
+     * Always returns a valid structured object even with no data.
      * @param {string} userId - User ID
-     * @returns {Promise<Object>} Knowledge overview with skills and tests
+     * @returns {Promise<Object>} { skills, stats, recentActivity }
      */
     async getKnowledgeOverview(userId) {
         // Get all user skills with calculated strength
-        const skills = await this.skillService.getUserSkills(userId);
+        const skills = await this.skillService.getUserSkills(userId) || [];
 
         // Get all user test history
-        const allTests = await this.storage.findQuickTestsByUserId(userId);
+        const allTests = await this.storage.findQuickTestsByUserId(userId) || [];
         const completedTests = allTests
-            .filter(t => t.completedAt)
+            .filter(t => t && t.completedAt)
             .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
 
-        // Organize tests by skill
+        // Organize tests by skill (keep last 5 per skill)
         const testsBySkill = {};
         completedTests.forEach(test => {
-            if (!testsBySkill[test.skillId]) {
-                testsBySkill[test.skillId] = [];
-            }
-            // Only keep last 5 tests per skill
+            if (!test || !test.skillId) return;
+            if (!testsBySkill[test.skillId]) testsBySkill[test.skillId] = [];
             if (testsBySkill[test.skillId].length < 5) {
                 testsBySkill[test.skillId].push(test);
             }
         });
 
         const enrichedSkills = skills.map(skill => {
+            if (!skill) return null;
+
             const tests = testsBySkill[skill.id] || [];
+
+            // FIX: use test.accuracy (0-100 percentage), NOT test.score (raw correct count e.g. 3)
             const avgAccuracy = tests.length > 0
-                ? tests.reduce((sum, t) => sum + t.score, 0) / tests.length
+                ? tests.reduce((sum, t) => sum + (Number(t.accuracy) || 0), 0) / tests.length
                 : 0;
 
-            // Insight Logic
-            let retentionStatus = 'Stable'; // Strong, Stable, Fading, Critical
+            let retentionStatus = 'Stable';
             let decayExplanation = 'Regular practice is maintaining this skill.';
             let statusColor = '#10b981'; // Green
 
-            // 1. Analyze Decay Multiplier (Performance Factor)
-            if (skill.adaptiveDecayMultiplier < 0.8) {
+            const decayMultiplier = Number(skill.adaptiveDecayMultiplier) || 1.0;
+            const halfLife = Number(skill.halfLife) || 7;
+            const daysSince = Number(skill.daysSinceLastPractice) || 0;
+
+            // 1. Performance factor
+            if (decayMultiplier < 0.8) {
                 decayExplanation = 'Broad retention. Decay slowed by excellent test performance.';
                 retentionStatus = 'Strong';
                 statusColor = '#10b981';
-            } else if (skill.adaptiveDecayMultiplier > 1.2) {
+            } else if (decayMultiplier > 1.2) {
                 decayExplanation = 'Retention struggling. Decay accelerated by recent low scores.';
                 retentionStatus = 'Critical';
                 statusColor = '#ef4444';
             }
 
-            // 2. Analyze Inactivity (Time Factor)
-            const halfLife = skill.halfLife || 7;
-            const daysSince = skill.daysSinceLastPractice;
-
+            // 2. Inactivity factor
             if (daysSince > halfLife * 2) {
                 retentionStatus = 'Fading';
                 decayExplanation = 'Fading due to inactivity. Has not been practiced recently.';
-                statusColor = '#f59e0b'; // Yellow
-            } else if (daysSince > halfLife) {
-                if (retentionStatus === 'Strong') {
-                    retentionStatus = 'Stable'; // Downgrade slightly
-                    decayExplanation = 'Good retention, but starting to fade due to recent inactivity.';
-                    statusColor = '#10b981';
-                }
+                statusColor = '#f59e0b';
+            } else if (daysSince > halfLife && retentionStatus === 'Strong') {
+                retentionStatus = 'Stable';
+                decayExplanation = 'Good retention, but starting to fade due to recent inactivity.';
+                statusColor = '#10b981';
             }
 
             return {
                 ...skill,
                 recentTests: tests,
-                avgTestAccuracy: avgAccuracy,
+                avgTestAccuracy: Math.round(avgAccuracy),
                 retentionStatus,
                 decayExplanation,
                 statusColor,
                 totalTests: tests.length
             };
-        });
+        }).filter(Boolean);
 
-        // Calculate overall statistics
+        // Safe aggregate stats
         const stats = {
-            totalSkills: skills.length,
+            totalSkills: enrichedSkills.length,
             totalTests: completedTests.length,
-            averageStrength: skills.length > 0
-                ? Math.round(skills.reduce((sum, s) => sum + s.currentStrength, 0) / skills.length)
+            averageStrength: enrichedSkills.length > 0
+                ? Math.round(
+                    enrichedSkills.reduce((sum, s) => sum + (Number(s.currentStrength) || 0), 0)
+                    / enrichedSkills.length
+                )
                 : 0,
-            skillsNeedingAttention: skills.filter(s => s.currentStrength < 60).length,
-            skillsStrong: skills.filter(s => s.currentStrength >= 70).length
+            skillsNeedingAttention: enrichedSkills.filter(s => (Number(s.currentStrength) || 0) < 60).length,
+            skillsStrong: enrichedSkills.filter(s => (Number(s.currentStrength) || 0) >= 70).length
         };
 
         return {
             skills: enrichedSkills,
             stats,
-            recentActivity: completedTests.slice(0, 10) // Last 10 tests across all skills
+            recentActivity: completedTests.slice(0, 10)
         };
     }
 }

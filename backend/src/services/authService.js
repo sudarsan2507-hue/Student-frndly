@@ -72,6 +72,14 @@ class AuthService {
             return null;
         }
     }
+
+    /**
+     * Register a new user (hashes password, saves to storage)
+     */
+    async registerUser({ name, email, password, role, status }) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        return this.storage.createUser({ name, email, password: hashedPassword, role, status });
+    }
 }
 
 export default AuthService;

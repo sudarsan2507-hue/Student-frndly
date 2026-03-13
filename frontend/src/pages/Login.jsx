@@ -55,7 +55,12 @@ const Login = () => {
         setLoading(false);
 
         if (result.success) {
-            navigate('/check-in');
+            // Admins go straight to admin dashboard, students go through check-in
+            if (result.user?.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/check-in');
+            }
         } else {
             setError(result.message);
         }

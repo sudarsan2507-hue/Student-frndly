@@ -27,10 +27,11 @@ export const AuthProvider = ({ children }) => {
         try {
             const { user: userData } = await authService.login(email, password);
             setUser(userData);
-            return { success: true };
+            return { success: true, user: userData };
         } catch (error) {
             return {
                 success: false,
+                status: error.response?.data?.status,
                 message: error.response?.data?.message || error.message || 'Login failed'
             };
         }

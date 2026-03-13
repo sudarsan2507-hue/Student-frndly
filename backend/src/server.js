@@ -2,66 +2,68 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
-// Import storage
-import InMemoryStorage from './storage/inMemoryStorage.js';
-import noteStorage from './storage/noteStorage.js';
+import SQLiteStorage from './storage/sqliteStorage.js';
+import NoteStorage from './storage/noteStorage.js';
 
-// Import services
 import AuthService from './services/authService.js';
 import SkillService from './services/skillService.js';
 import QuickTestService from './services/quickTestService.js';
 import CalendarService from './services/calendarService.js';
 import KnowledgeService from './services/knowledgeService.js';
+import AdminService from './services/adminService.js';
 
-// Import controllers
 import AuthController from './controllers/authController.js';
 import SkillController from './controllers/skillController.js';
 import QuickTestController from './controllers/quickTestController.js';
-
 import KnowledgeController from './controllers/knowledgeController.js';
 import CalendarController from './controllers/calendarController.js';
 import NoteController from './controllers/noteController.js';
+import AdminController from './controllers/adminController.js';
 
-// Import routes
 import createAuthRoutes from './routes/authRoutes.js';
 import createSkillRoutes from './routes/skillRoutes.js';
 import createQuickTestRoutes from './routes/quickTestRoutes.js';
 import createKnowledgeRoutes from './routes/knowledgeRoutes.js';
 import createCalendarRoutes from './routes/calendarRoutes.js';
 import createNoteRoutes from './routes/noteRoutes.js';
+import createAdminRoutes from './routes/adminRoutes.js';
+import createMessageRoutes from './routes/messageRoutes.js';
 
-// Import middleware
 import createAuthMiddleware from './middleware/authMiddleware.js';
 import errorHandler from './middleware/errorHandler.js';
 
-// Load environment variables
 dotenv.config();
+
+process.on('uncaughtException', (err) => console.error('UNCAUGHT EXCEPTION:', err));
+process.on('unhandledRejection', (reason) => console.error('UNHANDLED REJECTION:', reason));
 
 const PORT = process.env.PORT || 3000;
 const app = express();
 
-// Initialize storage
-const storage = new InMemoryStorage();
+// Storage
+const storage = new SQLiteStorage();
+const noteStorage = new NoteStorage(storage);
 
-// Initialize services
+// Services
 const authService = new AuthService(storage);
 const skillService = new SkillService(storage);
 const quickTestService = new QuickTestService(storage, skillService);
 const calendarService = new CalendarService(storage);
 const knowledgeService = new KnowledgeService(storage, skillService, quickTestService);
+const adminService = new AdminService(storage, skillService);
 
-// Initialize controllers
+// Controllers
 const authController = new AuthController(authService);
 const skillController = new SkillController(skillService);
 const quickTestController = new QuickTestController(quickTestService);
 const calendarController = new CalendarController(calendarService);
 const knowledgeController = new KnowledgeController(knowledgeService);
-const noteController = new NoteController();
-
-// Initialize middleware
-export const authMiddleware = createAuthMiddleware(storage);
+const noteController = new NoteController(noteStorage);
+const adminController = new AdminController(adminService);
 
 // Middleware
+export const authMiddleware = createAuthMiddleware(storage);
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -73,21 +75,16 @@ app.use('/api/quick-test', createQuickTestRoutes(quickTestController, authMiddle
 app.use('/api/knowledge', createKnowledgeRoutes(knowledgeController, authMiddleware));
 app.use('/api/calendar', createCalendarRoutes(calendarController, authMiddleware));
 app.use('/api/notes', createNoteRoutes(noteController, authMiddleware));
+app.use('/api/admin', createAdminRoutes(adminController, authMiddleware));
+app.use('/api/messages', createMessageRoutes(storage, authMiddleware));
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', message: 'Server is running' });
-});
-
-// Error handling middleware (must be last)
+app.get('/api/health', (req, res) => res.json({ status: 'ok', storage: 'SQLite' }));
 app.use(errorHandler);
 
-// Initialize storage and start server
 const startServer = async () => {
     try {
         await storage.initialize();
         await noteStorage.initialize();
-
         app.listen(PORT, () => {
             console.log(`✓ Server running on http://localhost:${PORT}`);
             console.log(`✓ API available at http://localhost:${PORT}/api`);
@@ -99,5 +96,4 @@ const startServer = async () => {
 };
 
 startServer();
-
 export default app;
