@@ -41,12 +41,32 @@ const Signup = () => {
         <div className="signup-container">
             {/* Left Side */}
             <div className="signup-left">
-                <div className="brand-logo">SF</div>
+                <div className="brand-logo">
+                    <svg className="brand-mark" width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="g1" x1="0" x2="1">
+                                <stop offset="0" stopColor="#7c3aed" />
+                                <stop offset="1" stopColor="#06b6d4" />
+                            </linearGradient>
+                        </defs>
+                        <rect x="0" y="0" width="48" height="48" rx="12" fill="url(#g1)" />
+                        <path d="M14 30 L20 18 L26 30" stroke="rgba(255,255,255,0.95)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                        <circle cx="34" cy="18" r="6" fill="rgba(255,255,255,0.95)" />
+                    </svg>
+                    <span className="brand-name">Student Frndly</span>
+                </div>
                 <div className="hero-content">
                     <h1>Track Your Learning,<br />Master Your Skills</h1>
                     <div className="slider-dots">
                         <span className="dot active" /><span className="dot" /><span className="dot" />
                     </div>
+                </div>
+                {/* Decorative animated visuals on the left panel */}
+                <div className="signup-left-visuals" aria-hidden="true">
+                    <span className="shape shape--1" />
+                    <span className="shape shape--2" />
+                    <span className="shape shape--3" />
+                    <span className="shape shape--4" />
                 </div>
                 <Link to="/login" className="back-link">← Back to login</Link>
             </div>
