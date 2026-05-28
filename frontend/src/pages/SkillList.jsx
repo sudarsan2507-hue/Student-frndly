@@ -8,6 +8,8 @@ import './SkillList.css';
 const SkillList = () => {
     const navigate = useNavigate();
     const [skills, setSkills] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('All');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showForm, setShowForm] = useState(false);
@@ -44,7 +46,16 @@ const SkillList = () => {
 
     // Derived State: Today's Skills (Highest Risk)
     // Priority: Strength < 50% OR Not practiced > 7 days
-    const focusSkills = skills
+    const filteredSkills = skills.filter(skill => {
+        const query = searchQuery.trim().toLowerCase();
+        const matchesSearch = !query || skill.name?.toLowerCase().includes(query) || skill.category?.toLowerCase().includes(query);
+        const matchesCategory = selectedCategory === 'All' || skill.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
+
+    const categories = ['All', ...new Set(skills.map(skill => skill.category).filter(Boolean))];
+
+    const focusSkills = filteredSkills
         .filter(s => s.currentStrength < 60 || s.daysSinceLastPractice > 7)
         .sort((a, b) => a.currentStrength - b.currentStrength) // Weakest first
         .slice(0, 3);
@@ -170,7 +181,29 @@ const SkillList = () => {
     return (
         <div className="skills-page">
             {/* Header Actions */}
-            <div className="skills-header-actions">
+            <div className="skills-header-top">
+                <div className="skills-search-panel">
+                    <input
+                        type="search"
+                        className="skills-search-input"
+                        placeholder="Search skills or categories..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <div className="skills-filter-chips">
+                        {categories.map(category => (
+                            <button
+                                key={category}
+                                type="button"
+                                className={`filter-chip ${selectedCategory === category ? 'active' : ''}`}
+                                onClick={() => setSelectedCategory(category)}
+                            >
+                                {category}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 <button
                     className="add-skill-btn"
                     onClick={() => setShowForm(!showForm)}
@@ -321,7 +354,22 @@ const SkillList = () => {
                 <>
                     <h2 className="grid-title">All Skills</h2>
                     <div className="skills-grid">
-                        {skills.map((skill) => {
+                        {filteredSkills.length === 0 ? (
+                            <div className="empty-state compact">
+                                <div className="empty-icon">🔎</div>
+                                <h3>No matching skills</h3>
+                                <p>Try a different search term or category filter.</p>
+                                <button
+                                    className="btn-submit"
+                                    onClick={() => {
+                                        setSearchQuery('');
+                                        setSelectedCategory('All');
+                                    }}
+                                >
+                                    Clear filters
+                                </button>
+                            </div>
+                        ) : filteredSkills.map((skill) => {
                             const decayStatus = getDecayStatus(skill.currentStrength);
                             const strengthColor = getStrengthColor(skill.currentStrength);
 

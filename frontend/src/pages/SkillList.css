@@ -5,6 +5,65 @@
     animation: fadeIn 0.5s ease-out;
 }
 
+.skills-header-top {
+    margin-bottom: 32px;
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.skills-search-panel {
+    flex: 1 1 520px;
+    min-width: 280px;
+}
+
+.skills-search-input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-size: 15px;
+    box-shadow: var(--shadow-card);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.skills-search-input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.skills-filter-chips {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+
+.filter-chip {
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-chip:hover,
+.filter-chip.active {
+    color: white;
+    border-color: var(--accent-primary);
+    background: var(--accent-primary);
+    transform: translateY(-1px);
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -21,6 +80,12 @@
     margin-bottom: 32px;
     display: flex;
     justify-content: flex-end;
+}
+
+.compact {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    padding: 48px 20px;
 }
 
 .add-skill-btn {
@@ -575,11 +640,78 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    .skills-header-top {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .skills-header-actions {
+        justify-content: flex-start;
+    }
+
     .skills-grid {
         grid-template-columns: 1fr;
     }
 
     .form-row {
         grid-template-columns: 1fr;
+    }
+
+    .skill-form-card,
+    .todays-skills-section {
+        padding: 20px;
+        border-radius: 18px;
+    }
+
+    .skill-card {
+        padding: 20px;
+    }
+
+    .skill-actions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .focus-actions {
+        flex-direction: column;
+    }
+
+    .skill-metadata {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .skills-page {
+        padding-bottom: 40px;
+    }
+
+    .skills-header-top {
+        margin-bottom: 24px;
+    }
+
+    .skills-search-input {
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+
+    .skills-filter-chips {
+        gap: 8px;
+    }
+
+    .filter-chip {
+        padding: 7px 12px;
+        font-size: 12px;
+    }
+
+    .strength-value {
+        font-size: 28px;
+    }
+
+    .action-btn {
+        height: 62px;
+    }
+
+    .focus-skill-card {
+        padding: 16px;
     }
 }
