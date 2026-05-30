@@ -28,6 +28,7 @@ import createCalendarRoutes from './routes/calendarRoutes.js';
 import createNoteRoutes from './routes/noteRoutes.js';
 import createAdminRoutes from './routes/adminRoutes.js';
 import createMessageRoutes from './routes/messageRoutes.js';
+import { createRetentionRoutes } from './routes/retentionRoutes.js';
 
 import createAuthMiddleware from './middleware/authMiddleware.js';
 import errorHandler from './middleware/errorHandler.js';
@@ -77,6 +78,7 @@ app.use('/api/calendar', createCalendarRoutes(calendarController, authMiddleware
 app.use('/api/notes', createNoteRoutes(noteController, authMiddleware));
 app.use('/api/admin', createAdminRoutes(adminController, authMiddleware));
 app.use('/api/messages', createMessageRoutes(storage, authMiddleware));
+app.use('/api/retention', createRetentionRoutes(storage));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', storage: 'SQLite' }));
 app.use(errorHandler);
