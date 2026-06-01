@@ -253,6 +253,18 @@
     color: var(--text-primary);
 }
 
+.btn-tiny.tertiary {
+    margin-top: 10px;
+    background: transparent;
+    color: var(--accent-primary);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.btn-tiny.tertiary:hover {
+    background: rgba(99, 102, 241, 0.06);
+    border-color: rgba(99, 102, 241, 0.35);
+}
+
 /* Common Components */
 .grid-title {
     font-size: 20px;
@@ -587,7 +599,7 @@
 /* Actions Grid */
 .skill-actions-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 10px;
 }
 
@@ -632,6 +644,12 @@
     background: #eff6ff;
     border-color: #bfdbfe;
     color: #2563eb;
+}
+
+.details-btn:hover {
+    background: #eef2ff;
+    border-color: #c7d2fe;
+    color: #4f46e5;
 }
 
 .action-btn span:first-child {

@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import SkillList from './pages/SkillList';
+import SkillDetail from './pages/SkillDetail';
 import KnowledgeTracker from './pages/KnowledgeTracker';
 import PostLoginCheckIn from './pages/PostLoginCheckIn';
 import Calendar from './pages/Calendar';
@@ -48,6 +49,7 @@ function App() {
                         {/* Student pages */}
                         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
                         <Route path="/skills" element={<ProtectedRoute><DashboardLayout><SkillList /></DashboardLayout></ProtectedRoute>} />
+                        <Route path="/skills/:skillId" element={<ProtectedRoute><DashboardLayout><SkillDetail /></DashboardLayout></ProtectedRoute>} />
                         <Route path="/knowledge" element={<ProtectedRoute><DashboardLayout><KnowledgeTracker /></DashboardLayout></ProtectedRoute>} />
                         <Route path="/calendar" element={<ProtectedRoute><DashboardLayout><Calendar /></DashboardLayout></ProtectedRoute>} />
                         <Route path="/messages" element={<ProtectedRoute><DashboardLayout><StudentMessages /></DashboardLayout></ProtectedRoute>} />

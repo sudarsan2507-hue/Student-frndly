@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import QuickTest from '../components/QuickTest';
 import TestResults from '../components/TestResults';
 import skillService from '../services/skillService';
+import retentionService from '../services/retentionService';
 import './SkillList.css';
 
 const SkillList = () => {
@@ -26,10 +27,22 @@ const SkillList = () => {
     });
     const [formError, setFormError] = useState('');
     const [formLoading, setFormLoading] = useState(false);
+    const [retentionMap, setRetentionMap] = useState({});
+    const [loadingRetention, setLoadingRetention] = useState({});
 
     useEffect(() => {
         loadSkills();
     }, []);
+
+    useEffect(() => {
+        // Prefetch predictions for today's focus skills to surface urgency
+        if (focusSkills && focusSkills.length) {
+            focusSkills.forEach(s => {
+                if (s && s.id && !retentionMap[s.id]) fetchPrediction(s.id);
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [skills]);
 
     const loadSkills = async () => {
         try {
@@ -141,6 +154,10 @@ const SkillList = () => {
         navigate('/calendar', { state: { scheduleSkill: skill } });
     };
 
+    const handleOpenDetails = (skillId) => {
+        navigate(`/skills/${skillId}`);
+    };
+
     const handleTestComplete = async (results) => {
         setActiveTest(null);
         setTestResults(results);
@@ -159,6 +176,21 @@ const SkillList = () => {
         if (strength >= 70) return '#10b981';
         if (strength >= 40) return '#f59e0b';
         return '#ef4444';
+    };
+
+    const fetchPrediction = async (skillId) => {
+        if (!skillId) return;
+        if (retentionMap[skillId]) return; // cached
+
+        setLoadingRetention(prev => ({ ...prev, [skillId]: true }));
+        try {
+            const data = await retentionService.predictRetention(skillId);
+            setRetentionMap(prev => ({ ...prev, [skillId]: data }));
+        } catch (err) {
+            console.error('Retention prediction error', err);
+        } finally {
+            setLoadingRetention(prev => ({ ...prev, [skillId]: false }));
+        }
     };
 
     const getDecayStatus = (strength) => {
@@ -248,6 +280,9 @@ const SkillList = () => {
                                     <button className="btn-tiny primary" onClick={() => handleStartTest(skill)}>Take Test</button>
                                     <button className="btn-tiny secondary" onClick={() => handleMarkAsPracticed(skill.id)}>Mark Reviewed</button>
                                 </div>
+                                <button className="btn-tiny tertiary" onClick={() => handleOpenDetails(skill.id)}>
+                                    View details
+                                </button>
                             </div>
                         ))}
                     </div>
@@ -412,6 +447,11 @@ const SkillList = () => {
                                                 {skill.currentStrength}%
                                             </span>
                                             <span className="strength-label">Strength</span>
+                                            {retentionMap[skill.id] && (
+                                                <div className="retention-info" style={{ marginTop: 6 }}>
+                                                    <small style={{ color: strengthColor }}>Retention: <strong>{retentionMap[skill.id].retention}%</strong></small>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -460,6 +500,23 @@ const SkillList = () => {
                                         >
                                             <span>📅</span>
                                             Schedule
+                                        </button>
+                                        <button
+                                            className="action-btn details-btn"
+                                            onClick={() => handleOpenDetails(skill.id)}
+                                            title="Open detailed retention page"
+                                        >
+                                            <span>📌</span>
+                                            Details
+                                        </button>
+                                        <button
+                                            className="action-btn predict-btn"
+                                            onClick={() => fetchPrediction(skill.id)}
+                                            title="Predict retention"
+                                            disabled={!!loadingRetention[skill.id]}
+                                        >
+                                            <span>🔮</span>
+                                            {loadingRetention[skill.id] ? 'Predicting...' : 'Predict'}
                                         </button>
                                     </div>
                                 </div>
