@@ -6,21 +6,42 @@ const KnowledgeTracker = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [isSlowLoading, setIsSlowLoading] = useState(false);
 
     useEffect(() => {
         loadData();
     }, []);
 
     const loadData = async () => {
+        let slowLoadingTimer;
+
         try {
             setLoading(true);
+            setIsSlowLoading(false);
             setError('');
-            const response = await knowledgeService.getOverview();
-            setData(response.data);
+
+            slowLoadingTimer = setTimeout(() => {
+                setIsSlowLoading(true);
+            }, 5000);
+
+            const response = await knowledgeService.getOverview({ timeoutMs: 12000 });
+            const overviewData = response?.data;
+
+            if (!overviewData || !Array.isArray(overviewData.skills) || !overviewData.stats) {
+                throw new Error('Received unexpected knowledge data format');
+            }
+
+            setData(overviewData);
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to load knowledge data');
+            if (err.code === 'ECONNABORTED') {
+                setError('Knowledge analysis timed out. Please retry.');
+            } else {
+                setError(err.response?.data?.message || err.message || 'Failed to load knowledge data');
+            }
         } finally {
+            clearTimeout(slowLoadingTimer);
             setLoading(false);
+            setIsSlowLoading(false);
         }
     };
 
@@ -35,6 +56,12 @@ const KnowledgeTracker = () => {
             <div className="knowledge-loading">
                 <div className="spinner"></div>
                 <p>Analyzing learning patterns...</p>
+                {isSlowLoading && (
+                    <>
+                        <p className="knowledge-loading-subtext">This is taking longer than usual.</p>
+                        <button onClick={loadData} className="retry-btn">Retry now</button>
+                    </>
+                )}
             </div>
         );
     }
