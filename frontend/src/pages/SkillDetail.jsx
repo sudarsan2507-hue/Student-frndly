@@ -16,6 +16,7 @@ const SkillDetail = () => {
     const [predictionLoading, setPredictionLoading] = useState(false);
     const [thresholdLoading, setThresholdLoading] = useState(false);
     const [error, setError] = useState('');
+    const [lastRefreshedAt, setLastRefreshedAt] = useState(null);
 
     useEffect(() => {
         const loadSkill = async () => {
@@ -37,6 +38,7 @@ const SkillDetail = () => {
                 try {
                     const retentionData = await retentionService.predictRetention(skillId);
                     setRetention(retentionData);
+                    setLastRefreshedAt(new Date().toISOString());
                 } catch (predictionError) {
                     console.error('Retention prediction error:', predictionError);
                 } finally {
@@ -95,10 +97,31 @@ const SkillDetail = () => {
             setSkill(refreshedData);
             const updatedRetention = await retentionService.predictRetention(skillId);
             setRetention(updatedRetention);
+            setLastRefreshedAt(new Date().toISOString());
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to mark skill as practiced');
         }
     };
+
+    const projectedDecay = useMemo(() => {
+        const baseStrength = retention?.retention ?? skill?.currentStrength ?? 0;
+        const halfLife = Number(skill?.halfLife) || 7;
+        const adaptive = Number(skill?.adaptiveDecayMultiplier) || 1;
+
+        const points = [];
+        for (let day = 0; day <= 30; day += 5) {
+            const exponent = (day / halfLife) * adaptive;
+            const value = Math.max(0, Math.min(100, baseStrength * Math.pow(0.5, exponent)));
+            points.push({ day, value: Math.round(value) });
+        }
+
+        return points;
+    }, [retention, skill]);
+
+    const lastRefreshedLabel = useMemo(() => {
+        if (!lastRefreshedAt) return '—';
+        return new Date(lastRefreshedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }, [lastRefreshedAt]);
 
     const handleStartTest = () => {
         navigate('/skills', { state: { startTestSkillId: skillId } });
@@ -185,8 +208,16 @@ const SkillDetail = () => {
                             <button className="detail-btn secondary small" onClick={handleMarkAsPracticed}>Mark practiced</button>
                         </div>
 
+                        <p className="retention-updated-at">Last updated: {predictionLoading ? 'Updating…' : lastRefreshedLabel}</p>
+
                         <div className="retention-visual">
-                            <div className="retention-ring" style={{ '--retention-accent': strengthColor }}>
+                            <div
+                                className="retention-ring"
+                                style={{
+                                    '--retention-accent': strengthColor,
+                                    '--retention-progress': retention?.retention ?? skill?.currentStrength ?? 0
+                                }}
+                            >
                                 <div className="retention-ring-inner">
                                     <span className="ring-label">Retention</span>
                                     <span className="ring-value">{predictionLoading ? '...' : `${retention?.retention ?? 0}%`}</span>
@@ -205,6 +236,22 @@ const SkillDetail = () => {
                                         <strong>{predictionLoading ? '...' : (retention?.decayFactor ?? '—')}</strong>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div className="decay-chart">
+                            <div className="decay-chart-header">
+                                <span>Projected retention trend (next 30 days)</span>
+                            </div>
+                            <div className="decay-bars">
+                                {projectedDecay.map(point => (
+                                    <div key={point.day} className="decay-bar-item" title={`Day ${point.day}: ${point.value}%`}>
+                                        <div className="decay-bar-track">
+                                            <div className="decay-bar-fill" style={{ height: `${point.value}%`, backgroundColor: strengthColor }} />
+                                        </div>
+                                        <span className="decay-day">D{point.day}</span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </section>
