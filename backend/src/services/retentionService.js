@@ -46,7 +46,7 @@ export default class RetentionService {
 
         // Exponential decay: retention = initial * 0.5^(days / halfLife) * adaptiveMultiplier
         const decayFactor = Math.pow(0.5, daysUnpracticed / halfLife);
-        let retention = initialProficiency * decayFactor * adaptiveMultiplier;
+        let retention = initialProficiency * decayFactor * adaptiveDecayMultiplier;
 
         // Clamp to 0-100 range
         retention = Math.max(0, Math.min(100, retention));
