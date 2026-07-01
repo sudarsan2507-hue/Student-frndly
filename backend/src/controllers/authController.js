@@ -1,16 +1,12 @@
-/**
- * Authentication controller
- * Handles login, register, status checks
- */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const MAX_NAME_LEN = 100;
+const MAX_PASSWORD_LEN = 128;
+
 class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
 
-    /**
-     * Login — blocks pending/rejected accounts
-     * POST /api/auth/login
-     */
     login = async (req, res, next) => {
         try {
             const { email, password } = req.body;
@@ -19,13 +15,20 @@ class AuthController {
                 return res.status(400).json({ success: false, message: 'Email and password are required' });
             }
 
+            if (!EMAIL_RE.test(email)) {
+                return res.status(400).json({ success: false, message: 'Invalid email format' });
+            }
+
+            if (typeof password !== 'string' || password.length > MAX_PASSWORD_LEN) {
+                return res.status(400).json({ success: false, message: 'Invalid password' });
+            }
+
             const user = await this.authService.validateCredentials(email, password);
 
             if (!user) {
                 return res.status(401).json({ success: false, message: 'Invalid email or password' });
             }
 
-            // Block pending accounts
             if (user.status === 'pending') {
                 return res.status(403).json({
                     success: false,
@@ -34,7 +37,6 @@ class AuthController {
                 });
             }
 
-            // Block rejected accounts
             if (user.status === 'rejected') {
                 return res.status(403).json({
                     success: false,
@@ -58,10 +60,6 @@ class AuthController {
         }
     };
 
-    /**
-     * Register new student (starts as pending)
-     * POST /api/auth/register
-     */
     register = async (req, res, next) => {
         try {
             const { firstName, lastName, email, password } = req.body;
@@ -70,13 +68,28 @@ class AuthController {
                 return res.status(400).json({ success: false, message: 'Email and password are required' });
             }
 
-            const existing = await this.authService.storage.findUserByEmail(email);
+            if (!EMAIL_RE.test(email)) {
+                return res.status(400).json({ success: false, message: 'Invalid email format' });
+            }
+
+            if (typeof password !== 'string' || password.length < 6) {
+                return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+            }
+
+            if (password.length > MAX_PASSWORD_LEN) {
+                return res.status(400).json({ success: false, message: 'Password too long' });
+            }
+
+            const firstTrimmed = (firstName || '').trim().slice(0, MAX_NAME_LEN);
+            const lastTrimmed = (lastName || '').trim().slice(0, MAX_NAME_LEN);
+
+            const existing = await this.authService.findUserByEmail(email);
             if (existing) {
                 return res.status(409).json({ success: false, message: 'An account with this email already exists' });
             }
 
             const user = await this.authService.registerUser({
-                name: `${firstName || ''} ${lastName || ''}`.trim() || email.split('@')[0],
+                name: `${firstTrimmed} ${lastTrimmed}`.trim() || email.split('@')[0],
                 email,
                 password,
                 role: 'student',
