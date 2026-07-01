@@ -90,6 +90,12 @@ retention = initialProficiency * 0.5^(daysSincePractice / halfLife) * adaptiveMu
 }
 ```
 
+### Security and Usage Notes
+- The prediction and threshold endpoints are authenticated.
+- Requests are rate-limited to keep the UI responsive and avoid accidental spamming.
+- Endpoints log request method, URL, user id, status, and duration for lightweight observability.
+- Users can only access their own retention data unless they are admins.
+
 ## Use Cases
 
 1. **Dashboard Alerts**: Show students when skills are decaying below thresholds
