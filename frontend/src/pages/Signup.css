@@ -483,6 +483,126 @@ h2 {
   transform: none;
 }
 
+/* Hero sub text */
+.hero-sub {
+  font-size: 15px;
+  color: rgba(255,255,255,0.55);
+  margin: 0 0 24px;
+  line-height: 1.6;
+  max-width: 360px;
+}
+
+/* Google button wrap */
+.sg-google-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.sg-google-placeholder {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 20px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+  cursor: not-allowed;
+  opacity: 0.7;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+}
+
+.sg-setup-badge {
+  position: absolute;
+  right: 12px;
+  font-size: 10px;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-weight: 600;
+}
+
+/* Divider */
+.sg-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.sg-divider::before,
+.sg-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+/* Error */
+.sg-error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #991b1b;
+  padding: 11px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+
+/* Success card */
+.sg-success {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #14532d;
+}
+
+.sg-success-icon { font-size: 28px; margin-bottom: 4px; }
+
+.sg-success strong { font-size: 17px; font-weight: 700; }
+
+.sg-success p { font-size: 14px; margin: 0; color: #166534; }
+
+.sg-success small { font-size: 12px; color: #15803d; }
+
+.sg-goto-login {
+  display: inline-block;
+  margin-top: 10px;
+  color: #15803d;
+  font-weight: 700;
+  text-decoration: underline;
+  font-size: 14px;
+}
+
+/* Spinner */
+.sg-spinner {
+  width: 18px; height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: sgSpin 0.75s linear infinite;
+}
+
+@keyframes sgSpin { to { transform: rotate(360deg); } }
+
+/* Eye button SVG fix */
+.toggle-password { display: flex; align-items: center; }
+
 /* Responsive */
 @media (max-width: 900px) {
   .signup-container {
