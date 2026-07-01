@@ -32,13 +32,25 @@ import { createRetentionRoutes } from './routes/retentionRoutes.js';
 
 import createAuthMiddleware from './middleware/authMiddleware.js';
 import errorHandler from './middleware/errorHandler.js';
+import logger from './utils/logger.js';
 
 dotenv.config();
 
-process.on('uncaughtException', (err) => console.error('UNCAUGHT EXCEPTION:', err));
-process.on('unhandledRejection', (reason) => console.error('UNHANDLED REJECTION:', reason));
+// Fail fast if required env vars are missing
+const REQUIRED_ENV = ['JWT_SECRET'];
+for (const varName of REQUIRED_ENV) {
+    if (!process.env[varName]) {
+        logger.error(`Missing required environment variable: ${varName}`);
+        process.exit(1);
+    }
+}
+
+process.on('uncaughtException', (err) => logger.error('UNCAUGHT EXCEPTION', { message: err.message, stack: err.stack }));
+process.on('unhandledRejection', (reason) => logger.error('UNHANDLED REJECTION', { reason: String(reason) }));
 
 const PORT = process.env.PORT || 3000;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 const app = express();
 
 // Storage
@@ -65,9 +77,12 @@ const adminController = new AdminController(adminService);
 // Middleware
 export const authMiddleware = createAuthMiddleware(storage);
 
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+    origin: FRONTEND_URL,
+    credentials: true
+}));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Routes
 app.use('/api/auth', createAuthRoutes(authController));
@@ -78,7 +93,7 @@ app.use('/api/calendar', createCalendarRoutes(calendarController, authMiddleware
 app.use('/api/notes', createNoteRoutes(noteController, authMiddleware));
 app.use('/api/admin', createAdminRoutes(adminController, authMiddleware));
 app.use('/api/messages', createMessageRoutes(storage, authMiddleware));
-app.use('/api/retention', createRetentionRoutes(storage));
+app.use('/api/retention', createRetentionRoutes(storage, authMiddleware));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', storage: 'SQLite' }));
 app.use(errorHandler);
@@ -88,11 +103,10 @@ const startServer = async () => {
         await storage.initialize();
         await noteStorage.initialize();
         app.listen(PORT, () => {
-            console.log(`✓ Server running on http://localhost:${PORT}`);
-            console.log(`✓ API available at http://localhost:${PORT}/api`);
+            logger.info(`Server running on http://localhost:${PORT}`);
         });
     } catch (error) {
-        console.error('Failed to start server:', error);
+        logger.error('Failed to start server', { message: error.message });
         process.exit(1);
     }
 };
