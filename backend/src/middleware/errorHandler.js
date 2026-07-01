@@ -1,8 +1,7 @@
-/**
- * Global error handling middleware
- */
+import logger from '../utils/logger.js';
+
 const errorHandler = (err, req, res, next) => {
-    console.error('Error:', err);
+    logger.error('Unhandled error', { message: err.message, path: req.path, method: req.method });
 
     const statusCode = err.statusCode || 500;
     const message = err.message || 'Internal server error';
@@ -15,4 +14,3 @@ const errorHandler = (err, req, res, next) => {
 };
 
 export default errorHandler;
-
