@@ -14,46 +14,30 @@ class AuthController {
             if (!email || !password) {
                 return res.status(400).json({ success: false, message: 'Email and password are required' });
             }
-
             if (!EMAIL_RE.test(email)) {
                 return res.status(400).json({ success: false, message: 'Invalid email format' });
             }
-
             if (typeof password !== 'string' || password.length > MAX_PASSWORD_LEN) {
                 return res.status(400).json({ success: false, message: 'Invalid password' });
             }
 
             const user = await this.authService.validateCredentials(email, password);
-
             if (!user) {
                 return res.status(401).json({ success: false, message: 'Invalid email or password' });
             }
 
             if (user.status === 'pending') {
-                return res.status(403).json({
-                    success: false,
-                    status: 'pending',
-                    message: 'Your account is awaiting admin approval. Please check back later.'
-                });
+                return res.status(403).json({ success: false, status: 'pending', message: 'Your account is awaiting admin approval. Please check back later.' });
             }
-
             if (user.status === 'rejected') {
-                return res.status(403).json({
-                    success: false,
-                    status: 'rejected',
-                    message: 'Your account has been rejected. Please contact your administrator.'
-                });
+                return res.status(403).json({ success: false, status: 'rejected', message: 'Your account has been rejected. Please contact your administrator.' });
             }
 
             const token = this.authService.generateToken(user);
-
             res.json({
                 success: true,
                 message: 'Login successful',
-                data: {
-                    token,
-                    user: { id: user.id, email: user.email, name: user.name, role: user.role, status: user.status }
-                }
+                data: { token, user: { id: user.id, email: user.email, name: user.name, role: user.role, status: user.status } }
             });
         } catch (error) {
             next(error);
@@ -67,15 +51,12 @@ class AuthController {
             if (!email || !password) {
                 return res.status(400).json({ success: false, message: 'Email and password are required' });
             }
-
             if (!EMAIL_RE.test(email)) {
                 return res.status(400).json({ success: false, message: 'Invalid email format' });
             }
-
             if (typeof password !== 'string' || password.length < 6) {
                 return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
             }
-
             if (password.length > MAX_PASSWORD_LEN) {
                 return res.status(400).json({ success: false, message: 'Password too long' });
             }
@@ -100,6 +81,34 @@ class AuthController {
                 success: true,
                 message: 'Account created! Awaiting admin approval before you can log in.',
                 data: { id: user.id, email: user.email, name: user.name, status: user.status }
+            });
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    /** POST /api/auth/google — verify Google ID token, issue app JWT */
+    googleLogin = async (req, res, next) => {
+        try {
+            const { credential } = req.body;
+            if (!credential) {
+                return res.status(400).json({ success: false, message: 'Google credential is required' });
+            }
+
+            const user = await this.authService.verifyGoogleCredential(credential);
+
+            if (user.status === 'pending') {
+                return res.status(403).json({ success: false, status: 'pending', message: 'Your account is awaiting admin approval. Please check back later.' });
+            }
+            if (user.status === 'rejected') {
+                return res.status(403).json({ success: false, status: 'rejected', message: 'Your account has been rejected. Please contact your administrator.' });
+            }
+
+            const token = this.authService.generateToken(user);
+            res.json({
+                success: true,
+                message: 'Login successful',
+                data: { token, user: { id: user.id, email: user.email, name: user.name, role: user.role, status: user.status } }
             });
         } catch (error) {
             next(error);

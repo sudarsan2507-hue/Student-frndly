@@ -14,6 +14,19 @@ const authService = {
         throw new Error(response.data.message || 'Login failed');
     },
 
+    async googleLogin(credential) {
+        const response = await api.post('/auth/google', { credential });
+
+        if (response.data.success) {
+            const { token, user } = response.data.data;
+            localStorage.setItem('authToken', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            return { token, user };
+        }
+
+        throw new Error(response.data.message || 'Google login failed');
+    },
+
     logout() {
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
