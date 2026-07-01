@@ -1,13 +1,8 @@
-/**
- * Admin controller
- * Handles admin API endpoints — all routes are admin-only
- */
 class AdminController {
     constructor(adminService) {
         this.adminService = adminService;
     }
 
-    /** GET /api/admin/pending */
     getPendingStudents = async (req, res, next) => {
         try {
             const students = await this.adminService.getPendingStudents();
@@ -15,7 +10,6 @@ class AdminController {
         } catch (err) { next(err); }
     };
 
-    /** POST /api/admin/approve/:userId */
     approveStudent = async (req, res, next) => {
         try {
             const user = await this.adminService.approveStudent(req.params.userId);
@@ -23,7 +17,6 @@ class AdminController {
         } catch (err) { next(err); }
     };
 
-    /** POST /api/admin/reject/:userId */
     rejectStudent = async (req, res, next) => {
         try {
             const user = await this.adminService.rejectStudent(req.params.userId);
@@ -31,7 +24,6 @@ class AdminController {
         } catch (err) { next(err); }
     };
 
-    /** GET /api/admin/analytics */
     getAnalytics = async (req, res, next) => {
         try {
             const data = await this.adminService.getAllStudentAnalytics();
@@ -39,7 +31,6 @@ class AdminController {
         } catch (err) { next(err); }
     };
 
-    /** POST /api/admin/message/:studentId — send a message/tip/meeting */
     sendMessage = async (req, res, next) => {
         try {
             const { studentId } = req.params;
@@ -50,15 +41,13 @@ class AdminController {
         } catch (err) { next(err); }
     };
 
-    /** GET /api/admin/messages/:studentId — get messages sent to a student */
     getStudentMessages = async (req, res, next) => {
         try {
-            const msgs = this.adminService.storage.findMessagesSentByAdmin(req.user.id, req.params.studentId);
+            const msgs = await this.adminService.getStudentMessages(req.user.id, req.params.studentId);
             res.json({ success: true, data: msgs });
         } catch (err) { next(err); }
     };
 
-    /** GET /api/admin/student/:studentId — get full student detail */
     getStudentDetail = async (req, res, next) => {
         try {
             const detail = await this.adminService.getStudentDetail(req.params.studentId);

@@ -1,48 +1,39 @@
-/**
- * Admin service
- * Business logic for admin operations: approvals, student analytics
- */
+import logger from '../utils/logger.js';
+
+const MIN_SKILL_STRENGTH = 10;
+
 class AdminService {
     constructor(storage, skillService) {
-        this.storage = storage;  // exposed for direct queries in controller
+        this._storage = storage;
         this.skillService = skillService;
     }
 
-    /** Get all pending approval requests */
     async getPendingStudents() {
-        return this.storage.getPendingUsers();
+        return this._storage.getPendingUsers();
     }
 
-    /** Approve a student account */
     async approveStudent(userId) {
-        const user = await this.storage.findUserById(userId);
+        const user = await this._storage.findUserById(userId);
         if (!user) throw new Error('User not found');
         if (user.role === 'admin') throw new Error('Cannot change admin status');
-        return this.storage.approveUser(userId);
+        return this._storage.approveUser(userId);
     }
 
-    /** Reject a student account */
     async rejectStudent(userId) {
-        const user = await this.storage.findUserById(userId);
+        const user = await this._storage.findUserById(userId);
         if (!user) throw new Error('User not found');
         if (user.role === 'admin') throw new Error('Cannot change admin status');
-        return this.storage.rejectUser(userId);
+        return this._storage.rejectUser(userId);
     }
 
-    /**
-     * Get all students with their skill analytics
-     * Used for the admin real-time dashboard
-     */
     async getAllStudentAnalytics() {
-        const students = await this.storage.getAllStudentsWithStats();
+        const students = await this._storage.getAllStudentsWithStats();
 
-        // Aggregate across all students
         const total = students.length;
         const approved = students.filter(s => s.status === 'approved').length;
         const pending = students.filter(s => s.status === 'pending').length;
         const rejected = students.filter(s => s.status === 'rejected').length;
 
-        // Skill retention distribution across all students
         const retentionCounts = { Strong: 0, Stable: 0, Fading: 0, Critical: 0 };
         const allSkills = students.flatMap(s => (s.skills || []).map(sk => ({
             ...sk,
@@ -68,27 +59,41 @@ class AdminService {
             students
         };
     }
-    /** Send a message/tip/meeting invite from admin to a student */
+
     async sendMessage(fromId, toId, { type, subject, content, meetingDate }) {
-        const student = await this.storage.findUserById(toId);
+        const student = await this._storage.findUserById(toId);
         if (!student) throw new Error('Student not found');
-        return this.storage.createMessage({ fromUserId: fromId, toUserId: toId, type, subject, content, meetingDate });
+        return this._storage.createMessage({ fromUserId: fromId, toUserId: toId, type, subject, content, meetingDate });
     }
 
-    /** Get full student detail: profile + skills + tests + messages */
+    async getStudentMessages(adminId, studentId) {
+        return this._storage.findMessagesSentByAdmin(adminId, studentId);
+    }
+
     async getStudentDetail(studentId) {
-        const student = await this.storage.findUserById(studentId);
+        const student = await this._storage.findUserById(studentId);
         if (!student) throw new Error('Student not found');
-        const skills = this.storage.db.prepare(`SELECT * FROM skills WHERE userId = ?`).all(studentId);
-        const tests = this.storage.db.prepare(`SELECT * FROM quick_tests WHERE userId = ? AND completedAt IS NOT NULL ORDER BY completedAt DESC`).all(studentId);
-        const avgAccuracy = tests.length > 0
-            ? Math.round(tests.reduce((s, t) => s + (Number(t.accuracy) || 0), 0) / tests.length)
+
+        const skills = await this._storage.findSkillsByUserId(studentId);
+        const tests = await this._storage.findQuickTestsByUserId(studentId);
+        const completedTests = tests.filter(t => t.completedAt != null)
+            .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+
+        const avgAccuracy = completedTests.length > 0
+            ? Math.round(completedTests.reduce((s, t) => s + (Number(t.accuracy) || 0), 0) / completedTests.length)
             : 0;
+
         return {
-            id: student.id, name: student.name, email: student.email,
-            status: student.status, createdAt: student.createdAt,
-            skills, tests, avgAccuracy,
-            totalSkills: skills.length, totalTests: tests.length
+            id: student.id,
+            name: student.name,
+            email: student.email,
+            status: student.status,
+            createdAt: student.createdAt,
+            skills,
+            tests: completedTests,
+            avgAccuracy,
+            totalSkills: skills.length,
+            totalTests: completedTests.length
         };
     }
 }
