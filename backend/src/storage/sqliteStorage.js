@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import crypto from 'crypto';
 import DataAccess from './dataAccess.js';
+import logger from '../utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,7 +51,7 @@ class SQLiteStorage extends DataAccess {
         } catch (e) { /* Column already exists — safe to ignore */ }
 
         this.initialized = true;
-        console.log(`✓ SQLite database initialized at ${DB_PATH}`);
+        logger.info(`SQLite database initialized at ${DB_PATH}`);
     }
 
     _createTables() {
@@ -60,8 +61,8 @@ class SQLiteStorage extends DataAccess {
                 email     TEXT UNIQUE NOT NULL,
                 password  TEXT NOT NULL,
                 name      TEXT,
-                role      TEXT DEFAULT 'student',
-                status    TEXT DEFAULT 'approved',
+                role      TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'admin')),
+                status    TEXT NOT NULL DEFAULT 'approved' CHECK (status IN ('pending', 'approved', 'rejected')),
                 createdAt TEXT,
                 updatedAt TEXT
             );
@@ -71,31 +72,31 @@ class SQLiteStorage extends DataAccess {
                 userId                  TEXT NOT NULL,
                 name                    TEXT NOT NULL,
                 category                TEXT DEFAULT 'General',
-                initialProficiency      REAL DEFAULT 50,
+                initialProficiency      REAL DEFAULT 50 CHECK (initialProficiency >= 0 AND initialProficiency <= 100),
                 lastPracticedAt         TEXT,
-                halfLife                REAL DEFAULT 7,
-                baseDecayRate           REAL DEFAULT 0.1,
-                adaptiveDecayMultiplier REAL DEFAULT 1.0,
+                halfLife                REAL DEFAULT 7 CHECK (halfLife > 0),
+                baseDecayRate           REAL DEFAULT 0.1 CHECK (baseDecayRate >= 0),
+                adaptiveDecayMultiplier REAL DEFAULT 1.0 CHECK (adaptiveDecayMultiplier >= 0),
                 createdAt               TEXT,
                 updatedAt               TEXT,
                 FOREIGN KEY (userId) REFERENCES users(id)
             );
 
             CREATE TABLE IF NOT EXISTS quick_tests (
-                id                    TEXT PRIMARY KEY,
-                skillId               TEXT NOT NULL,
-                userId                TEXT NOT NULL,
-                skillName             TEXT,
-                questions             TEXT,
-                answers               TEXT,
-                score                 REAL,
-                accuracy              REAL,
-                totalTime             REAL,
+                id                     TEXT PRIMARY KEY,
+                skillId                TEXT NOT NULL,
+                userId                 TEXT NOT NULL,
+                skillName              TEXT,
+                questions              TEXT,
+                answers                TEXT,
+                score                  REAL,
+                accuracy               REAL CHECK (accuracy IS NULL OR (accuracy >= 0 AND accuracy <= 100)),
+                totalTime              REAL,
                 averageTimePerQuestion REAL,
-                responseTime          REAL,
-                confidence            TEXT,
-                completedAt           TEXT,
-                createdAt             TEXT,
+                responseTime           REAL,
+                confidence             TEXT,
+                completedAt            TEXT,
+                createdAt              TEXT,
                 FOREIGN KEY (skillId) REFERENCES skills(id),
                 FOREIGN KEY (userId)  REFERENCES users(id)
             );
@@ -105,8 +106,8 @@ class SQLiteStorage extends DataAccess {
                 userId    TEXT NOT NULL,
                 skillId   TEXT,
                 date      TEXT NOT NULL,
-                type      TEXT NOT NULL,
-                status    TEXT,
+                type      TEXT NOT NULL CHECK (type IN ('practice', 'scheduled', 'test')),
+                status    TEXT CHECK (status IS NULL OR status IN ('pending', 'completed', 'cancelled')),
                 createdAt TEXT,
                 FOREIGN KEY (userId) REFERENCES users(id)
             );
@@ -125,15 +126,23 @@ class SQLiteStorage extends DataAccess {
                 id          TEXT PRIMARY KEY,
                 fromUserId  TEXT NOT NULL,
                 toUserId    TEXT NOT NULL,
-                type        TEXT DEFAULT 'tip',
+                type        TEXT DEFAULT 'tip' CHECK (type IN ('tip', 'meeting', 'feedback', 'announcement')),
                 subject     TEXT,
                 content     TEXT NOT NULL,
                 meetingDate TEXT,
-                isRead      INTEGER DEFAULT 0,
+                isRead      INTEGER DEFAULT 0 CHECK (isRead IN (0, 1)),
                 createdAt   TEXT,
                 FOREIGN KEY (fromUserId) REFERENCES users(id),
                 FOREIGN KEY (toUserId)   REFERENCES users(id)
             );
+
+            CREATE INDEX IF NOT EXISTS idx_skills_userId       ON skills(userId);
+            CREATE INDEX IF NOT EXISTS idx_quick_tests_userId  ON quick_tests(userId);
+            CREATE INDEX IF NOT EXISTS idx_quick_tests_skillId ON quick_tests(skillId);
+            CREATE INDEX IF NOT EXISTS idx_calendar_userId     ON calendar_events(userId);
+            CREATE INDEX IF NOT EXISTS idx_notes_userId        ON personal_notes(userId);
+            CREATE INDEX IF NOT EXISTS idx_messages_toUserId   ON messages(toUserId);
+            CREATE INDEX IF NOT EXISTS idx_messages_fromUserId ON messages(fromUserId);
         `);
     }
 
@@ -161,9 +170,9 @@ class SQLiteStorage extends DataAccess {
                     });
                 });
                 insertMany(users);
-                console.log(`✓ Migrated ${users.length} users from users.json`);
+                logger.info(`Migrated ${users.length} users from users.json`);
             } catch (e) {
-                console.log('No users.json found to migrate, starting fresh.');
+                logger.info('No users.json found to migrate, starting fresh.');
             }
         }
 
@@ -182,7 +191,7 @@ class SQLiteStorage extends DataAccess {
                 `);
                 const tx = this.db.transaction((rows) => { for (const s of rows) ins.run(s); });
                 tx(skills);
-                console.log(`✓ Migrated ${skills.length} skills from skills.json`);
+                logger.info(`Migrated ${skills.length} skills from skills.json`);
             } catch (e) { /* No file — OK */ }
         }
 
@@ -207,7 +216,7 @@ class SQLiteStorage extends DataAccess {
                     });
                 });
                 tx(tests);
-                console.log(`✓ Migrated ${tests.length} quick tests from quickTests.json`);
+                logger.info(`Migrated ${tests.length} quick tests from quickTests.json`);
             } catch (e) { /* No file — OK */ }
         }
 
@@ -223,7 +232,7 @@ class SQLiteStorage extends DataAccess {
                 `);
                 const tx = this.db.transaction((rows) => { for (const e of rows) ins.run(e); });
                 tx(events);
-                console.log(`✓ Migrated ${events.length} calendar events from calendarEvents.json`);
+                logger.info(`Migrated ${events.length} calendar events from calendarEvents.json`);
             } catch (e) { /* No file — OK */ }
         }
 
@@ -239,7 +248,7 @@ class SQLiteStorage extends DataAccess {
                 `);
                 const tx = this.db.transaction((rows) => { for (const n of rows) ins.run(n); });
                 tx(notes);
-                console.log(`✓ Migrated ${notes.length} notes from notes.json`);
+                logger.info(`Migrated ${notes.length} notes from notes.json`);
             } catch (e) { /* No file — OK */ }
         }
     }
@@ -309,19 +318,42 @@ class SQLiteStorage extends DataAccess {
 
     async getAllStudentsWithStats() {
         const students = this.db.prepare(`SELECT id, email, name, role, status, createdAt FROM users WHERE role = 'student'`).all();
+
+        if (students.length === 0) return [];
+
+        // Fetch all skills and tests in two queries instead of N×2
+        const allSkills = this.db.prepare(`SELECT * FROM skills WHERE userId IN (SELECT id FROM users WHERE role = 'student')`).all();
+        const allTests = this.db.prepare(`SELECT userId, accuracy FROM quick_tests WHERE completedAt IS NOT NULL AND userId IN (SELECT id FROM users WHERE role = 'student')`).all();
+
+        const skillsByUser = new Map();
+        for (const sk of allSkills) {
+            if (!skillsByUser.has(sk.userId)) skillsByUser.set(sk.userId, []);
+            skillsByUser.get(sk.userId).push(sk);
+        }
+
+        const testStatsByUser = new Map();
+        for (const t of allTests) {
+            if (!testStatsByUser.has(t.userId)) testStatsByUser.set(t.userId, { sum: 0, count: 0 });
+            const entry = testStatsByUser.get(t.userId);
+            entry.sum += Number(t.accuracy) || 0;
+            entry.count += 1;
+        }
+
         return students.map(student => {
-            const skills = this.db.prepare(`SELECT * FROM skills WHERE userId = ?`).all(student.id);
-            const tests = this.db.prepare(`SELECT * FROM quick_tests WHERE userId = ? AND completedAt IS NOT NULL`).all(student.id);
+            const skills = skillsByUser.get(student.id) || [];
+            const testStats = testStatsByUser.get(student.id) || { sum: 0, count: 0 };
+
             const avgStrength = skills.length > 0
                 ? Math.round(skills.reduce((s, sk) => s + (sk.initialProficiency || 50), 0) / skills.length)
                 : 0;
-            const avgAccuracy = tests.length > 0
-                ? Math.round(tests.reduce((s, t) => s + (Number(t.accuracy) || 0), 0) / tests.length)
+            const avgAccuracy = testStats.count > 0
+                ? Math.round(testStats.sum / testStats.count)
                 : 0;
+
             return {
                 ...student,
                 totalSkills: skills.length,
-                totalTests: tests.length,
+                totalTests: testStats.count,
                 avgStrength,
                 avgAccuracy,
                 skills
@@ -530,6 +562,9 @@ class SQLiteStorage extends DataAccess {
     // ─────────────────────────────────────────────────────────
 
     async createNote(noteData) {
+        if (!noteData.content || typeof noteData.content !== 'string') {
+            throw new Error('Validation failed: content is required and must be a string');
+        }
         const now = new Date().toISOString();
         const note = {
             id: noteData.id || crypto.randomUUID(),

@@ -1,13 +1,20 @@
-/**
- * Retention Routes
- * Endpoints for predicting skill retention.
- */
-
 import express from 'express';
 import RetentionService from '../services/retentionService.js';
+import logger from '../utils/logger.js';
 
-const createSimpleRateLimiter = ({ windowMs = 60_000, maxRequests = 30 } = {}) => {
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_REQUESTS = 30;
+
+const createSimpleRateLimiter = ({ windowMs = RATE_WINDOW_MS, maxRequests = RATE_MAX_REQUESTS } = {}) => {
     const hits = new Map();
+
+    // Prune expired entries periodically to prevent unbounded growth
+    setInterval(() => {
+        const now = Date.now();
+        for (const [key, entry] of hits) {
+            if (now > entry.resetAt) hits.delete(key);
+        }
+    }, windowMs).unref();
 
     return (req, res, next) => {
         const key = `${req.user?.id || req.ip}:${req.path}`;
@@ -33,20 +40,22 @@ const createSimpleRateLimiter = ({ windowMs = 60_000, maxRequests = 30 } = {}) =
 
 const createRetentionAuditLogger = () => (req, res, next) => {
     const start = Date.now();
-
     res.on('finish', () => {
-        const durationMs = Date.now() - start;
-        const userTag = req.user?.id || 'anonymous';
-        console.log(`[Retention] ${req.method} ${req.originalUrl} user=${userTag} status=${res.statusCode} duration=${durationMs}ms`);
+        logger.info('Retention request', {
+            method: req.method,
+            url: req.originalUrl,
+            userId: req.user?.id || 'anonymous',
+            status: res.statusCode,
+            durationMs: Date.now() - start
+        });
     });
-
     next();
 };
 
 export function createRetentionRoutes(dataAccess, authMiddleware) {
     const router = express.Router();
     const retentionService = new RetentionService(dataAccess);
-    const rateLimiter = createSimpleRateLimiter({ windowMs: 60_000, maxRequests: 30 });
+    const rateLimiter = createSimpleRateLimiter();
 
     router.get('/health', (req, res) => {
         res.json({ status: 'ok', service: 'retention', timestamp: new Date().toISOString() });
@@ -55,25 +64,15 @@ export function createRetentionRoutes(dataAccess, authMiddleware) {
     router.use(authMiddleware.authenticateToken);
     router.use(createRetentionAuditLogger());
 
-    /**
-     * POST /api/retention/predict
-     * Predict retention for a single skill.
-     * Body: { skillId }
-     */
     router.post('/predict', rateLimiter, async (req, res) => {
         try {
             const { skillId } = req.body;
-            if (!skillId) {
-                return res.status(400).json({ error: 'skillId is required' });
-            }
+            if (!skillId) return res.status(400).json({ error: 'skillId is required' });
 
             const skill = await dataAccess.findSkillById(skillId);
-            if (!skill) {
-                return res.status(404).json({ error: 'Skill not found' });
-            }
+            if (!skill) return res.status(404).json({ error: 'Skill not found' });
 
-            const canAccessSkill = req.user.role === 'admin' || skill.userId === req.user.id;
-            if (!canAccessSkill) {
+            if (req.user.role !== 'admin' && skill.userId !== req.user.id) {
                 return res.status(403).json({ error: 'Unauthorized access to this skill' });
             }
 
@@ -84,10 +83,6 @@ export function createRetentionRoutes(dataAccess, authMiddleware) {
         }
     });
 
-    /**
-     * GET /api/retention/user/:userId
-     * Get retention predictions for all skills of a user.
-     */
     router.get('/user/:userId', rateLimiter, async (req, res) => {
         try {
             const { userId } = req.params;
@@ -103,17 +98,10 @@ export function createRetentionRoutes(dataAccess, authMiddleware) {
         }
     });
 
-    /**
-     * POST /api/retention/threshold
-     * Estimate when a skill will fall below a retention threshold.
-     * Body: { skillId, threshold }
-     */
     router.post('/threshold', rateLimiter, async (req, res) => {
         try {
             const { skillId, threshold = 50 } = req.body;
-            if (!skillId) {
-                return res.status(400).json({ error: 'skillId is required' });
-            }
+            if (!skillId) return res.status(400).json({ error: 'skillId is required' });
 
             const thresholdValue = Number(threshold);
             if (Number.isNaN(thresholdValue) || thresholdValue < 0 || thresholdValue > 100) {
@@ -121,12 +109,9 @@ export function createRetentionRoutes(dataAccess, authMiddleware) {
             }
 
             const skill = await dataAccess.findSkillById(skillId);
-            if (!skill) {
-                return res.status(404).json({ error: 'Skill not found' });
-            }
+            if (!skill) return res.status(404).json({ error: 'Skill not found' });
 
-            const canAccessSkill = req.user.role === 'admin' || skill.userId === req.user.id;
-            if (!canAccessSkill) {
+            if (req.user.role !== 'admin' && skill.userId !== req.user.id) {
                 return res.status(403).json({ error: 'Unauthorized access to this skill' });
             }
 
