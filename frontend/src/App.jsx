@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -26,6 +27,7 @@ const AdminRoute = ({ children }) => {
 
 function App() {
     return (
+        <ErrorBoundary>
         <BrowserRouter>
             <AuthProvider>
                 <MotionProvider>
@@ -61,6 +63,7 @@ function App() {
                 </MotionProvider>
             </AuthProvider>
         </BrowserRouter>
+        </ErrorBoundary>
     );
 }
 

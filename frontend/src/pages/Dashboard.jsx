@@ -53,8 +53,8 @@ const Dashboard = () => {
             const dateString = today.toISOString().split('T')[0];
             const response = await noteService.getNotes(dateString);
             setNotes(response.data || []);
-        } catch (err) {
-            console.error('Failed to load today\'s notes:', err);
+        } catch {
+            // Non-critical: notes widget failure shouldn't block the dashboard
         }
     };
 
