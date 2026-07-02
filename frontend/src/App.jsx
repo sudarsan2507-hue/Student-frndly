@@ -15,13 +15,15 @@ import AdminDashboard from './pages/AdminDashboard';
 import StudentMessages from './pages/StudentMessages';
 import { MotionProvider } from './context/MotionContext';
 import DashboardLayout from './components/DashboardLayout';
+import authService from './services/authService';
 import './App.css';
 
-/** Guard: admin-only, redirects students to /dashboard */
+/** Guard: admin-only — role read from JWT payload, NOT from mutable localStorage */
 const AdminRoute = ({ children }) => {
     const { user } = useAuth();
     if (!user) return <Navigate to="/login" replace />;
-    if (user.role !== 'admin') return <Navigate to="/dashboard" replace />;
+    const role = authService.getTokenRole();
+    if (role !== 'admin') return <Navigate to="/dashboard" replace />;
     return children;
 };
 

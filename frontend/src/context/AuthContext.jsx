@@ -45,8 +45,8 @@ export const AuthProvider = ({ children }) => {
     /**
      * Logout function
      */
-    const logout = () => {
-        authService.logout();
+    const logout = async () => {
+        await authService.logout();
         sessionStorage.removeItem('hasCheckedIn');
         setUser(null);
     };

@@ -14,8 +14,8 @@ const authService = {
         throw new Error(response.data.message || 'Login failed');
     },
 
-    async googleLogin(credential) {
-        const response = await api.post('/auth/google', { credential });
+    async googleLogin(credential, accountType = 'individual') {
+        const response = await api.post('/auth/google', { credential, accountType });
 
         if (response.data.success) {
             const { token, user } = response.data.data;
@@ -27,7 +27,11 @@ const authService = {
         throw new Error(response.data.message || 'Google login failed');
     },
 
-    logout() {
+    async logout() {
+        try {
+            const token = this.getToken();
+            if (token) await api.post('/auth/logout');
+        } catch { /* best-effort server revocation */ }
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
     },
@@ -42,6 +46,18 @@ const authService = {
             return userJson ? JSON.parse(userJson) : null;
         } catch {
             localStorage.removeItem('user');
+            return null;
+        }
+    },
+
+    /** Read role from the JWT payload — cannot be tampered without the server secret */
+    getTokenRole() {
+        const token = this.getToken();
+        if (!token) return null;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.role || null;
+        } catch {
             return null;
         }
     },
