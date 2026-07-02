@@ -28,6 +28,9 @@ class SkillController {
                 data: skill
             });
         } catch (error) {
+            if (error.message.includes('Skill limit reached')) {
+                return res.status(422).json({ success: false, message: error.message });
+            }
             next(error);
         }
     };

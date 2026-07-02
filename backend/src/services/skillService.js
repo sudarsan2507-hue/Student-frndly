@@ -61,10 +61,15 @@ class SkillService {
             throw new Error(validation.errors.join(', '));
         }
 
+        const existing = await this.storage.findSkillsByUserId(userId);
+        if (existing.length >= 50) {
+            throw new Error('Skill limit reached. You can track a maximum of 50 skills.');
+        }
+
         const skill = new Skill({
             ...skillData,
             userId,
-            lastPracticedAt: new Date().toISOString() // Set to now when created
+            lastPracticedAt: new Date().toISOString()
         });
 
         const savedSkill = await this.storage.createSkill(skill.toJSON());
