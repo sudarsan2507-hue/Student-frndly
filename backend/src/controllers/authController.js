@@ -1,3 +1,5 @@
+import { revokeToken } from '../services/authService.js';
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const MAX_NAME_LEN = 100;
 const MAX_PASSWORD_LEN = 128;
@@ -62,7 +64,7 @@ class AuthController {
             }
 
             const firstTrimmed = (firstName || '').trim().slice(0, MAX_NAME_LEN);
-            const lastTrimmed = (lastName || '').trim().slice(0, MAX_NAME_LEN);
+            const lastTrimmed  = (lastName  || '').trim().slice(0, MAX_NAME_LEN);
 
             const existing = await this.authService.findUserByEmail(email);
             if (existing) {
@@ -74,8 +76,8 @@ class AuthController {
                 name: `${firstTrimmed} ${lastTrimmed}`.trim() || email.split('@')[0],
                 email,
                 password,
-                role: isCompany ? 'admin' : 'student',
-                status: isCompany ? 'pending' : 'approved'
+                role:   isCompany ? 'admin'   : 'student',
+                status: isCompany ? 'pending' : 'approved',
             });
 
             if (!isCompany) {
@@ -86,7 +88,7 @@ class AuthController {
                     data: {
                         token,
                         user: { id: user.id, email: user.email, name: user.name, role: user.role, status: user.status },
-                        autoLogin: true
+                        autoLogin: true,
                     }
                 });
             }
@@ -104,12 +106,12 @@ class AuthController {
     /** POST /api/auth/google — verify Google ID token, issue app JWT */
     googleLogin = async (req, res, next) => {
         try {
-            const { credential } = req.body;
+            const { credential, accountType } = req.body;
             if (!credential) {
                 return res.status(400).json({ success: false, message: 'Google credential is required' });
             }
 
-            const user = await this.authService.verifyGoogleCredential(credential);
+            const user = await this.authService.verifyGoogleCredential(credential, accountType || 'individual');
 
             if (user.status === 'pending') {
                 return res.status(403).json({ success: false, status: 'pending', message: 'Your account is awaiting admin approval. Please check back later.' });
@@ -127,6 +129,19 @@ class AuthController {
         } catch (error) {
             next(error);
         }
+    };
+
+    /** POST /api/auth/logout — revoke the current token server-side */
+    logout = (req, res) => {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (token) {
+            try {
+                const decoded = this.authService.verifyToken(token);
+                if (decoded?.jti) revokeToken(decoded.jti);
+            } catch { /* already invalid — nothing to revoke */ }
+        }
+        res.json({ success: true, message: 'Logged out' });
     };
 }
 

@@ -36,9 +36,10 @@ const createAuthRoutes = (authController) => {
     const router = express.Router();
     const rateLimiter = createAuthRateLimiter();
 
-    router.post('/login', rateLimiter, authController.login);
+    router.post('/login',    rateLimiter, authController.login);
     router.post('/register', rateLimiter, authController.register);
-    router.post('/google', rateLimiter, authController.googleLogin);
+    router.post('/google',   rateLimiter, authController.googleLogin);
+    router.post('/logout',   authController.logout);
 
     return router;
 };
