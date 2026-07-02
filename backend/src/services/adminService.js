@@ -12,18 +12,22 @@ class AdminService {
         return this._storage.getPendingUsers();
     }
 
-    async approveStudent(userId) {
+    async approveStudent(adminId, userId) {
         const user = await this._storage.findUserById(userId);
         if (!user) throw new Error('User not found');
         if (user.role === 'admin') throw new Error('Cannot change admin status');
-        return this._storage.approveUser(userId);
+        const updated = this._storage.approveUser(userId);
+        this._storage.insertAuditLog({ adminId, action: 'approve', targetId: userId, details: { email: user.email } });
+        return updated;
     }
 
-    async rejectStudent(userId) {
+    async rejectStudent(adminId, userId) {
         const user = await this._storage.findUserById(userId);
         if (!user) throw new Error('User not found');
         if (user.role === 'admin') throw new Error('Cannot change admin status');
-        return this._storage.rejectUser(userId);
+        const updated = this._storage.rejectUser(userId);
+        this._storage.insertAuditLog({ adminId, action: 'reject', targetId: userId, details: { email: user.email } });
+        return updated;
     }
 
     async getAllStudentAnalytics() {
@@ -63,7 +67,13 @@ class AdminService {
     async sendMessage(fromId, toId, { type, subject, content, meetingDate }) {
         const student = await this._storage.findUserById(toId);
         if (!student) throw new Error('Student not found');
-        return this._storage.createMessage({ fromUserId: fromId, toUserId: toId, type, subject, content, meetingDate });
+        const msg = this._storage.createMessage({ fromUserId: fromId, toUserId: toId, type, subject, content, meetingDate });
+        this._storage.insertAuditLog({ adminId: fromId, action: 'send_message', targetId: toId, details: { type, subject } });
+        return msg;
+    }
+
+    async getAuditLog({ limit = 100, offset = 0 } = {}) {
+        return this._storage.getAuditLog({ limit, offset });
     }
 
     async getStudentMessages(adminId, studentId) {

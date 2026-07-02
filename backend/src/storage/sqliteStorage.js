@@ -126,7 +126,7 @@ class SQLiteStorage extends DataAccess {
                 id          TEXT PRIMARY KEY,
                 fromUserId  TEXT NOT NULL,
                 toUserId    TEXT NOT NULL,
-                type        TEXT DEFAULT 'tip' CHECK (type IN ('tip', 'meeting', 'feedback', 'announcement')),
+                type        TEXT DEFAULT 'tip' CHECK (type IN ('tip', 'meeting', 'alert', 'feedback', 'announcement')),
                 subject     TEXT,
                 content     TEXT NOT NULL,
                 meetingDate TEXT,
@@ -136,13 +136,24 @@ class SQLiteStorage extends DataAccess {
                 FOREIGN KEY (toUserId)   REFERENCES users(id)
             );
 
-            CREATE INDEX IF NOT EXISTS idx_skills_userId       ON skills(userId);
-            CREATE INDEX IF NOT EXISTS idx_quick_tests_userId  ON quick_tests(userId);
-            CREATE INDEX IF NOT EXISTS idx_quick_tests_skillId ON quick_tests(skillId);
-            CREATE INDEX IF NOT EXISTS idx_calendar_userId     ON calendar_events(userId);
-            CREATE INDEX IF NOT EXISTS idx_notes_userId        ON personal_notes(userId);
-            CREATE INDEX IF NOT EXISTS idx_messages_toUserId   ON messages(toUserId);
-            CREATE INDEX IF NOT EXISTS idx_messages_fromUserId ON messages(fromUserId);
+            CREATE TABLE IF NOT EXISTS admin_audit_log (
+                id        TEXT PRIMARY KEY,
+                adminId   TEXT NOT NULL,
+                action    TEXT NOT NULL,
+                targetId  TEXT,
+                details   TEXT,
+                createdAt TEXT NOT NULL,
+                FOREIGN KEY (adminId) REFERENCES users(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_skills_userId         ON skills(userId);
+            CREATE INDEX IF NOT EXISTS idx_quick_tests_userId    ON quick_tests(userId);
+            CREATE INDEX IF NOT EXISTS idx_quick_tests_skillId   ON quick_tests(skillId);
+            CREATE INDEX IF NOT EXISTS idx_calendar_userId       ON calendar_events(userId);
+            CREATE INDEX IF NOT EXISTS idx_notes_userId          ON personal_notes(userId);
+            CREATE INDEX IF NOT EXISTS idx_messages_toUserId     ON messages(toUserId);
+            CREATE INDEX IF NOT EXISTS idx_messages_fromUserId   ON messages(fromUserId);
+            CREATE INDEX IF NOT EXISTS idx_audit_adminId         ON admin_audit_log(adminId);
         `);
     }
 
@@ -669,6 +680,25 @@ class SQLiteStorage extends DataAccess {
 
     getUnreadCount(userId) {
         return this.db.prepare(`SELECT COUNT(*) as c FROM messages WHERE toUserId = ? AND isRead = 0`).get(userId)?.c || 0;
+    }
+
+    // ── Admin audit log ──────────────────────────────────────
+    insertAuditLog({ adminId, action, targetId, details }) {
+        const id = crypto.randomUUID();
+        this.db.prepare(
+            `INSERT INTO admin_audit_log (id, adminId, action, targetId, details, createdAt)
+             VALUES (?, ?, ?, ?, ?, ?)`
+        ).run(id, adminId, action, targetId || null, details ? JSON.stringify(details) : null, new Date().toISOString());
+        return id;
+    }
+
+    getAuditLog({ limit = 100, offset = 0 } = {}) {
+        return this.db.prepare(
+            `SELECT l.*, u.name AS adminName, u.email AS adminEmail
+             FROM admin_audit_log l
+             LEFT JOIN users u ON l.adminId = u.id
+             ORDER BY l.createdAt DESC LIMIT ? OFFSET ?`
+        ).all(limit, offset);
     }
 }
 
