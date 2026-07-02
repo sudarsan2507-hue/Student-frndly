@@ -46,7 +46,7 @@ class AuthController {
 
     register = async (req, res, next) => {
         try {
-            const { firstName, lastName, email, password } = req.body;
+            const { firstName, lastName, email, password, accountType } = req.body;
 
             if (!email || !password) {
                 return res.status(400).json({ success: false, message: 'Email and password are required' });
@@ -69,18 +69,32 @@ class AuthController {
                 return res.status(409).json({ success: false, message: 'An account with this email already exists' });
             }
 
+            const isCompany = accountType === 'company';
             const user = await this.authService.registerUser({
                 name: `${firstTrimmed} ${lastTrimmed}`.trim() || email.split('@')[0],
                 email,
                 password,
-                role: 'student',
-                status: 'pending'
+                role: isCompany ? 'admin' : 'student',
+                status: isCompany ? 'pending' : 'approved'
             });
+
+            if (!isCompany) {
+                const token = this.authService.generateToken(user);
+                return res.status(201).json({
+                    success: true,
+                    message: 'Account created! Welcome aboard.',
+                    data: {
+                        token,
+                        user: { id: user.id, email: user.email, name: user.name, role: user.role, status: user.status },
+                        autoLogin: true
+                    }
+                });
+            }
 
             res.status(201).json({
                 success: true,
-                message: 'Account created! Awaiting admin approval before you can log in.',
-                data: { id: user.id, email: user.email, name: user.name, status: user.status }
+                message: 'Company account created! An admin will review and approve your request.',
+                data: { id: user.id, email: user.email, name: user.name, status: user.status, autoLogin: false }
             });
         } catch (error) {
             next(error);
