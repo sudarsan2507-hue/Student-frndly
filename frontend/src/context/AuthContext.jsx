@@ -37,6 +37,11 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    /** Set user directly (used after register auto-login or Google login) */
+    const loginDirect = (userData) => {
+        setUser(userData);
+    };
+
     /**
      * Logout function
      */
@@ -49,6 +54,7 @@ export const AuthProvider = ({ children }) => {
     const value = {
         user,
         login,
+        loginDirect,
         logout,
         isAuthenticated: !!user,
         loading
