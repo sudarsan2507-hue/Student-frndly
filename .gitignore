@@ -28,8 +28,9 @@ backend/data/*.json
 # Claude Code skills (cloned from upstream repos, not tracked)
 .claude/skills/
 
-# Reference art and generated portrait assets — a downloaded image of
-# unknown licence, so it (and everything derived from it) stays local
-# rather than going into git history.
+# Raw reference art — a downloaded image of unknown licence, kept local.
+# The *processed* derivatives in frontend/src/assets/ (colorized cutout,
+# voxel grid, webp) are committed: Login/Signup import them directly, and
+# a build on a clean checkout (Vercel) fails to resolve those imports
+# without them actually being in the repo.
 /Reference/
-frontend/src/assets/
