@@ -5,6 +5,8 @@ import { GoogleLogin } from '@react-oauth/google';
 import api from '../services/api';
 import authService from '../services/authService';
 import { useAuth } from '../context/AuthContext';
+import { useMotion } from '../context/MotionContext';
+import StudyScene from '../components/StudyScene';
 import './Signup.css';
 
 const GOOGLE_ENABLED = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -18,6 +20,7 @@ const slide = {
 export default function Signup() {
     const navigate = useNavigate();
     const { loginDirect } = useAuth();
+    const { enableMotion } = useMotion() || { enableMotion: true };
 
     const [step, setStep] = useState(1);
     const [dir, setDir] = useState(1);
@@ -99,16 +102,16 @@ export default function Signup() {
                             transition={{ duration: 0.42, ease: 'easeOut' }}
                             className="sg-illustration"
                         >
-                            {accountType === 'individual' ? <IndividualScene /> : <CompanyScene />}
+                            <StudyScene animate={enableMotion} />
                         </motion.div>
                     </AnimatePresence>
                 </div>
 
                 <div className="sg-left-footer">
                     <p className="sg-mode-label">
-                        {accountType === 'individual' ? '🎓 Student / Individual' : '🏢 Company / Organization'}
+                        {accountType === 'individual' ? 'Student or self-learner' : 'Company or organisation'}
                     </p>
-                    <Link to="/login" className="sg-back-home">← Back to login</Link>
+                    <Link to="/login" className="sg-back-home">Back to login</Link>
                 </div>
             </div>
 
@@ -118,47 +121,51 @@ export default function Signup() {
                     {success ? (
                         <motion.div key="success" className="sg-card sg-success-card"
                             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
-                            <div className="sg-success-icon">{accountType === 'company' ? '⏳' : '🎉'}</div>
-                            <h2>{accountType === 'company' ? 'Request sent!' : 'You\'re in!'}</h2>
+                            <div className="sg-success-icon">{accountType === 'company' ? '⏳' : '✓'}</div>
+                            <h2>{accountType === 'company' ? 'Request sent' : 'Account created'}</h2>
                             <p>{success}</p>
                             {accountType === 'company' && <small>An admin will review your company request. You'll get access once approved.</small>}
-                            <Link to="/login" className="sg-goto">Go to Login →</Link>
+                            <Link to="/login" className="sg-goto">Go to login</Link>
                         </motion.div>
 
                     ) : step === 1 ? (
                         /* ── Step 1: Account type ── */
                         <motion.div key="s1" className="sg-card" custom={dir}
                             variants={slide} initial="enter" animate="center" exit="exit">
-                            <h1 className="sg-heading">Who are you? 🤔</h1>
-                            <p className="sg-sub">Pick the account type that fits you</p>
+                            <h1 className="sg-heading">Who is this for?</h1>
+                            <p className="sg-sub">Individuals get access straight away. Company accounts are reviewed first.</p>
 
                             <div className="sg-type-grid">
                                 <button
                                     className={`sg-type-btn ${accountType === 'individual' ? 'sg-type-btn--on' : ''}`}
                                     onClick={() => setAccountType('individual')}
                                 >
-                                    <div className="sg-type-art"><MiniStudent /></div>
-                                    <strong>Individual</strong>
+                                    <div className="sg-type-row">
+                                        <MiniStudent />
+                                        <strong>Individual</strong>
+                                    </div>
                                     <span>Student · Self-learner</span>
-                                    <em>✅ Instant access</em>
-                                    {accountType === 'individual' && <div className="sg-type-check">✓</div>}
+                                    <em>Instant access</em>
+                                    <div className="sg-type-radio" aria-hidden="true" />
                                 </button>
 
                                 <button
                                     className={`sg-type-btn sg-type-btn--company ${accountType === 'company' ? 'sg-type-btn--on sg-type-btn--on-company' : ''}`}
                                     onClick={() => setAccountType('company')}
                                 >
-                                    <div className="sg-type-art"><MiniCompany /></div>
-                                    <strong>Company / Org</strong>
+                                    <div className="sg-type-row">
+                                        <MiniCompany />
+                                        <strong>Company / Org</strong>
+                                    </div>
                                     <span>Admin · Team manager</span>
-                                    <em>⏳ Requires approval</em>
-                                    {accountType === 'company' && <div className="sg-type-check sg-type-check--teal">✓</div>}
+                                    <em>Reviewed before access</em>
+                                    <div className="sg-type-radio sg-type-radio--teal" aria-hidden="true" />
                                 </button>
                             </div>
 
                             <motion.button className="sg-cta" onClick={next}
                                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                                Continue as {accountType === 'company' ? 'Company' : 'Individual'} →
+                                Continue as {accountType === 'company' ? 'a company' : 'an individual'}
                             </motion.button>
 
                             <p className="sg-switch">Already have an account? <Link to="/login">Log in</Link></p>
@@ -168,10 +175,10 @@ export default function Signup() {
                         /* ── Step 2: Registration form ── */
                         <motion.div key="s2" className="sg-card" custom={dir}
                             variants={slide} initial="enter" animate="center" exit="exit">
-                            <button className="sg-back" onClick={back}>← Back</button>
+                            <button className="sg-back" onClick={back}>Back</button>
 
                             <div className="sg-badge">
-                                {accountType === 'company' ? '🏢 Company Account' : '🎓 Individual Account'}
+                                {accountType === 'company' ? 'Company account' : 'Individual account'}
                             </div>
 
                             <h1 className="sg-heading">Create account</h1>
@@ -206,27 +213,27 @@ export default function Signup() {
                             <form onSubmit={handleSubmit} className="lr-form">
                                 <div style={{ display: 'flex', gap: 12 }}>
                                     <div className="lr-field" style={{ flex: 1 }}>
-                                        <span className="lr-field-icon">👤</span>
+                                        <span className="lr-field-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg></span>
                                         <input type="text" name="firstName" placeholder="First name"
                                             value={formData.firstName} onChange={handleChange} required />
                                     </div>
                                     <div className="lr-field" style={{ flex: 1 }}>
-                                        <span className="lr-field-icon">👤</span>
+                                        <span className="lr-field-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg></span>
                                         <input type="text" name="lastName" placeholder="Last name"
                                             value={formData.lastName} onChange={handleChange} />
                                     </div>
                                 </div>
 
                                 <div className="lr-field">
-                                    <span className="lr-field-icon">✉️</span>
+                                    <span className="lr-field-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg></span>
                                     <input type="email" name="email" placeholder="Email address"
                                         value={formData.email} onChange={handleChange} required />
                                 </div>
 
                                 <div className="lr-field lr-field--pw">
-                                    <span className="lr-field-icon">🔒</span>
+                                    <span className="lr-field-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg></span>
                                     <input type={showPw ? 'text' : 'password'} name="password"
-                                        placeholder="Password (min 6 chars)"
+                                        placeholder="Password (at least 6 characters)"
                                         value={formData.password} onChange={handleChange} required />
                                     <button type="button" className="lr-eye" onClick={() => setShowPw(p => !p)}>
                                         {showPw ? <EyeOff /> : <Eye />}
@@ -415,33 +422,24 @@ function OfficeBuilding() {
     );
 }
 
+/* Small inline glyphs, not an illustrated badge — this card is a plan
+   picker (like a billing/role selector in a serious SaaS product), not a
+   mascot introduction. The icon is a label marker, sized and weighted to
+   sit quietly next to the title rather than be the focal point. */
 function MiniStudent() {
     return (
-        <svg viewBox="0 0 80 80" width="80" height="80">
-            <circle cx="40" cy="30" r="20" fill="#fbbf24" />
-            <path d="M20 28 Q22 8 40 6 Q58 8 60 28 Q50 18 40 18 Q30 18 20 28Z" fill="#1e1b4b" />
-            <circle cx="33" cy="28" r="3.5" fill="#1e1b4b" />
-            <circle cx="47" cy="28" r="3.5" fill="#1e1b4b" />
-            <path d="M34 38 Q40 44 46 38" stroke="#92400e" strokeWidth="2" fill="none" strokeLinecap="round" />
-            <rect x="20" y="48" width="40" height="28" rx="8" fill="#7c3aed" />
-            <rect x="25" y="62" width="30" height="18" rx="6" fill="#22c55e" />
-            <line x1="40" y1="62" x2="40" y2="80" stroke="#15803d" strokeWidth="2.5" />
+        <svg className="sg-type-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4.5 21v-1.2A6.8 6.8 0 0 1 12 13a6.8 6.8 0 0 1 7.5 6.8V21" />
         </svg>
     );
 }
 
 function MiniCompany() {
     return (
-        <svg viewBox="0 0 80 80" width="80" height="80">
-            <rect x="15" y="30" width="50" height="48" rx="5" fill="#0891b2" />
-            <rect x="27" y="10" width="26" height="24" rx="5" fill="#7c3aed" />
-            <rect x="35" y="2" width="10" height="12" rx="3" fill="#6d28d9" />
-            <rect x="20" y="40" width="10" height="10" rx="2" fill="#fef08a" />
-            <rect x="35" y="40" width="10" height="10" rx="2" fill="#fef08a" opacity="0.5" />
-            <rect x="50" y="40" width="10" height="10" rx="2" fill="#fef08a" />
-            <rect x="20" y="56" width="10" height="10" rx="2" fill="#fef08a" opacity="0.6" />
-            <rect x="50" y="56" width="10" height="10" rx="2" fill="#fef08a" />
-            <rect x="30" y="58" width="20" height="20" rx="4" fill="#0e7490" />
+        <svg className="sg-type-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="4" y="3" width="16" height="18" rx="1.5" />
+            <path d="M8.5 8h.01M8.5 12h.01M8.5 16h.01M15.5 8h.01M15.5 12h.01M15.5 16h.01" />
         </svg>
     );
 }

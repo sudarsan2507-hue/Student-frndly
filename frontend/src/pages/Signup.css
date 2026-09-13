@@ -1,25 +1,28 @@
-/* Signup — warm sunset theme, matches Login.css */
+/* Signup — same ink surface and card as Login.css; shares the lr-* form controls */
 
 .sg-root {
   position: relative;
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  min-height: 100vh;
+  grid-template-columns: 1.05fr 0.95fr;
+  min-height: 100dvh;
   overflow: hidden;
-  background: #0e0b1a;
-  font-family: 'Inter', system-ui, sans-serif;
-  color: #f1f5f9;
+  background: var(--paper);
+  color: var(--text);
 }
 
-/* ── Left panel ─────────────────────────────────────────── */
-.sg-left {
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-  min-height: 100vh;
+/* ── Left panel: a white panel holding the illustration, matching Login ── */
+.sg-left { position: relative; z-index: 1; overflow: hidden; min-height: 100dvh; }
+
+.sg-left::before {
+  content: '';
+  position: absolute;
+  inset: 20px;
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  z-index: -1;
 }
 
-/* illustration centered in the panel */
 .sg-scene {
   position: absolute;
   inset: 0;
@@ -27,25 +30,18 @@
   align-items: center;
   justify-content: center;
   padding: 0 24px 150px;
-  box-sizing: border-box;
 }
 
-.sg-illustration {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: translateY(-18px);
-}
+.sg-illustration { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
 
 .sg-svg {
-  width: min(430px, 48vw);
+  width: min(400px, 44vw);
   height: auto;
   aspect-ratio: 1 / 1;
   display: block;
   overflow: hidden;
 }
 
-/* footer pinned to the bottom */
 .sg-left-footer {
   position: absolute;
   bottom: 0;
@@ -54,313 +50,187 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 48px 40px;
+  gap: 16px;
+  padding: 16px 40px 40px;
 }
 
 .sg-mode-label {
   font-size: 13px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.5);
-  background: rgba(249,115,22,0.08);
-  border: 1px solid rgba(249,115,22,0.2);
-  padding: 7px 16px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 6px 14px;
   border-radius: 999px;
-  backdrop-filter: blur(6px);
 }
 
-.sg-back-home {
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.35);
-  text-decoration: none;
-  transition: color 0.18s;
-}
-.sg-back-home:hover { color: rgba(255,255,255,0.72); }
+.sg-back-home { font-size: 13.5px; font-weight: 500; color: var(--text-2); text-decoration: none; transition: color 0.15s; }
+.sg-back-home:hover { color: var(--text); }
 
 /* ── Right panel ────────────────────────────────────────── */
-.sg-right {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 48px;
-}
+.sg-right { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 40px 48px; }
 
-/* ── Glass card ─────────────────────────────────────────── */
 .sg-card {
   width: 100%;
   max-width: 420px;
-  background: rgba(255,255,255,0.045);
-  border: 1px solid rgba(251,191,36,0.1);
-  border-radius: 24px;
-  padding: 34px 30px;
-  backdrop-filter: blur(28px);
-  box-shadow:
-    0 0 0 1px rgba(251,191,36,0.06),
-    0 32px 64px rgba(0,0,0,0.55),
-    inset 0 1px 0 rgba(255,255,255,0.05);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--r-lg);
+  padding: 32px 30px 28px;
+  box-shadow: var(--shadow-2);
 }
 
-.sg-heading {
-  font-size: 24px;
-  font-weight: 800;
-  color: #f8fafc;
-  margin-bottom: 6px;
-}
+.sg-heading { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.sg-sub { font-size: 14px; color: var(--text-2); margin-bottom: 20px; line-height: 1.5; }
 
-.sg-sub {
-  font-size: 14px;
-  color: rgba(255,255,255,0.38);
-  margin-bottom: 22px;
-}
+/* ── Type selection ─────────────────────────────────────── */
+.sg-type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
 
-/* ── Type selection cards ───────────────────────────────── */
-.sg-type-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 22px;
-}
-
+/* Plan-picker style: left-aligned, thin border, no illustration — a
+   serious role/billing-tier selector rather than an introduced mascot.
+   Selection reads through the border colour and the radio dot alone. */
 .sg-type-btn {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 20px 14px;
-  background: rgba(255,255,255,0.04);
-  border: 1.5px solid rgba(255,255,255,0.09);
-  border-radius: 18px;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 14px 28px 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
   cursor: pointer;
-  font-family: inherit;
-  color: #f1f5f9;
-  transition: all 0.22s ease;
-  text-align: center;
+  color: var(--text);
+  transition: border-color 0.15s ease, background 0.15s ease;
+  text-align: left;
 }
-.sg-type-btn:hover {
-  border-color: rgba(249,115,22,0.45);
-  background: rgba(249,115,22,0.07);
-  transform: translateY(-2px);
-}
-.sg-type-btn--on {
-  border-color: #f97316;
-  background: rgba(249,115,22,0.1);
-  box-shadow: 0 4px 20px rgba(249,115,22,0.18), inset 0 0 0 1px rgba(249,115,22,0.2);
-}
-.sg-type-btn--on-company {
-  border-color: #22d3ee;
-  background: rgba(34,211,238,0.07);
-  box-shadow: 0 4px 20px rgba(34,211,238,0.15), inset 0 0 0 1px rgba(34,211,238,0.15);
-}
+.sg-type-btn:hover { border-color: var(--line-strong); }
+.sg-type-btn--on { border-color: var(--accent); background: var(--accent-soft); }
+.sg-type-btn--on-company { border-color: var(--cta); background: var(--cta-soft); }
 
-.sg-type-art {
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.sg-type-row { display: flex; align-items: center; gap: 7px; }
+.sg-type-icon { color: var(--text-3); flex-shrink: 0; }
+.sg-type-btn--on .sg-type-icon { color: var(--accent); }
+.sg-type-btn--on-company .sg-type-icon { color: var(--cta); }
 
-.sg-type-btn strong { font-size: 14px; font-weight: 700; display: block; }
-.sg-type-btn span   { font-size: 12px; color: rgba(255,255,255,0.42); display: block; }
-.sg-type-btn em     { font-size: 11px; color: rgba(255,255,255,0.32); font-style: normal; display: block; }
+.sg-type-btn strong { font-size: 13px; font-weight: 600; display: block; white-space: nowrap; }
+.sg-type-btn span { font-size: 11.5px; color: var(--text-2); display: block; padding-left: 22px; white-space: nowrap; }
+.sg-type-btn em { font-size: 10.5px; color: var(--text-3); font-style: normal; display: block; padding-left: 22px; margin-top: 1px; white-space: nowrap; }
 
-.sg-type-check {
+/* Plain radio dot, not a checkmark badge — quieter, matches the
+   left-aligned "form control" framing instead of a celebratory tick. */
+.sg-type-radio {
   position: absolute;
-  top: 10px;
+  top: 14px;
   right: 10px;
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #f97316;
-  color: white;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 1.5px solid var(--line-strong);
+  background: var(--surface);
 }
-.sg-type-check--teal { background: #22d3ee; }
+.sg-type-btn--on .sg-type-radio {
+  border-color: var(--accent);
+  background: radial-gradient(circle, var(--accent) 0 5px, transparent 5.5px);
+}
+.sg-type-btn--on-company .sg-type-radio {
+  border-color: var(--cta);
+  background: radial-gradient(circle, var(--cta) 0 5px, transparent 5.5px);
+}
 
-/* ── CTA button ─────────────────────────────────────────── */
+/* ── CTA ────────────────────────────────────────────────── */
 .sg-cta {
   width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, #c2410c, #f97316, #ec4899);
-  background-size: 200% 200%;
-  animation: gradShift 5s ease infinite;
+  padding: 14px;
+  background: var(--cta);
   color: #fff;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   border: none;
-  border-radius: 13px;
+  border-radius: var(--r-md);
   cursor: pointer;
-  font-family: inherit;
-  box-shadow: 0 8px 24px rgba(194,65,12,0.38);
-  transition: box-shadow 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   margin-bottom: 4px;
+  transition: background 0.15s, transform 0.1s;
 }
-.sg-cta:hover:not(:disabled) { box-shadow: 0 12px 36px rgba(194,65,12,0.55); }
-.sg-cta:disabled { opacity: 0.6; cursor: not-allowed; animation: none; }
-
-@keyframes gradShift {
-  0%,100% { background-position: 0% 50%; }
-  50%      { background-position: 100% 50%; }
-}
+.sg-cta:hover:not(:disabled) { background: var(--cta-hover); }
+.sg-cta:active:not(:disabled) { transform: translateY(1px); }
+.sg-cta:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ── Step 2 extras ──────────────────────────────────────── */
-.sg-back {
-  background: none;
-  border: none;
-  color: rgba(255,255,255,0.38);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: 14px;
-  font-family: inherit;
-  display: block;
-  transition: color 0.18s;
-}
-.sg-back:hover { color: rgba(255,255,255,0.72); }
+.sg-back { background: none; border: none; color: var(--text-2); font-size: 13.5px; font-weight: 500; cursor: pointer; padding: 0; margin-bottom: 14px; display: block; transition: color 0.15s; }
+.sg-back:hover { color: var(--text); }
 
 .sg-badge {
   display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 14px;
-  border-radius: 999px;
-  background: rgba(249,115,22,0.12);
-  border: 1px solid rgba(249,115,22,0.28);
-  color: #fdba74;
-  letter-spacing: 0.4px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
   margin-bottom: 14px;
 }
 
-.sg-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-size: 13px;
-  color: rgba(255,255,255,0.42);
-  user-select: none;
-  position: relative;
-}
+.sg-checkbox { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; color: var(--text-2); user-select: none; position: relative; }
 .sg-checkbox input { position: absolute; opacity: 0; width: 0; height: 0; }
 .sg-check-box {
-  width: 20px;
-  height: 20px;
-  border: 1.5px solid rgba(255,255,255,0.18);
-  border-radius: 6px;
-  background: rgba(255,255,255,0.04);
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 5px;
+  background: var(--surface);
   flex: 0 0 auto;
-  transition: all 0.18s;
+  transition: all 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.sg-checkbox input:checked + .sg-check-box {
-  background: #f97316;
-  border-color: #fb923c;
-}
-.sg-checkbox input:checked + .sg-check-box::after {
-  content: '✓';
-  font-size: 12px;
-  color: white;
-  font-weight: 700;
-}
-.sg-checkbox a { color: #fb923c; text-decoration: underline; }
+.sg-checkbox input:focus-visible + .sg-check-box { box-shadow: var(--focus); }
+.sg-checkbox input:checked + .sg-check-box { background: var(--ink); border-color: var(--ink); }
+.sg-checkbox input:checked + .sg-check-box::after { content: '✓'; font-size: 11px; color: #fff; font-weight: 700; }
+.sg-checkbox a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 
-.sg-note {
-  font-size: 12px;
-  color: rgba(255,255,255,0.28);
-  text-align: center;
-  margin-top: 8px;
-}
+.sg-note { font-size: 12.5px; color: var(--text-3); text-align: center; margin-top: 8px; }
 
-.sg-switch {
-  font-size: 13px;
-  color: rgba(255,255,255,0.32);
-  text-align: center;
-}
-.sg-switch a { color: #fb923c; font-weight: 600; text-decoration: none; }
-.sg-switch a:hover { text-decoration: underline; }
+.sg-switch { font-size: 13.5px; color: var(--text-2); text-align: center; }
+.sg-switch a { color: var(--accent); font-weight: 600; text-decoration: none; }
+.sg-switch a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ── Success card ───────────────────────────────────────── */
-.sg-success-card {
-  text-align: center;
-  padding: 44px 32px;
-}
-.sg-success-icon { font-size: 48px; margin-bottom: 16px; display: block; }
-.sg-success-card h2 { font-size: 26px; font-weight: 800; color: #f8fafc; margin-bottom: 10px; }
-.sg-success-card p { font-size: 15px; color: rgba(255,255,255,0.52); margin-bottom: 10px; }
-.sg-success-card small { font-size: 12px; color: rgba(255,255,255,0.32); display: block; margin-bottom: 20px; }
+.sg-success-card { text-align: center; padding: 40px 32px; }
+.sg-success-icon { font-size: 40px; margin-bottom: 14px; display: block; }
+.sg-success-card h2 { font-size: 24px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.sg-success-card p { font-size: 15px; color: var(--text-2); margin-bottom: 10px; line-height: 1.5; }
+.sg-success-card small { font-size: 12.5px; color: var(--text-3); display: block; margin-bottom: 20px; }
 
 .sg-goto {
   display: inline-block;
-  padding: 12px 28px;
-  background: rgba(249,115,22,0.15);
-  border: 1px solid rgba(249,115,22,0.32);
-  border-radius: 12px;
-  color: #fdba74;
-  font-weight: 700;
+  padding: 11px 24px;
+  background: var(--cta);
+  border-radius: var(--r-md);
+  color: #fff;
+  font-weight: 600;
   font-size: 14px;
   text-decoration: none;
-  transition: all 0.2s;
+  transition: background 0.15s;
 }
-.sg-goto:hover { background: rgba(249,115,22,0.25); color: #fed7aa; }
+.sg-goto:hover { background: var(--cta-hover); }
 
-/* ── Character / SVG animations (mirrors Login.css) ─────── */
-.char-bob {
-  animation: charBob 3.6s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: center bottom;
-}
-@keyframes charBob {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-14px); }
-}
-.eye-blink {
-  animation: eyeBlink 4.5s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-@keyframes eyeBlink {
-  0%, 42%, 50%, 100% { transform: scaleY(1); }
-  46%                 { transform: scaleY(0.06); }
-}
-.pulse-glow { animation: pulseGlow 3s ease-in-out infinite; transform-box: fill-box; }
-@keyframes pulseGlow {
-  0%, 100% { filter: drop-shadow(0 0 4px rgba(251,191,36,0.3)); transform: scale(1); }
-  50%       { filter: drop-shadow(0 0 16px rgba(251,191,36,0.7)); transform: scale(1.08); }
-}
-.fl1 { animation: float1 5.2s ease-in-out infinite; }
-.fl2 { animation: float2 6.8s ease-in-out infinite; }
-.fl3 { animation: float3 4.6s ease-in-out infinite; }
-@keyframes float1 { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(-5px,-16px) rotate(3deg)} }
-@keyframes float2 { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(7px,-20px) rotate(-5deg)} }
-@keyframes float3 { 0%,100%{transform:translate(0,0) rotate(0deg)} 50%{transform:translate(-3px,-12px) rotate(6deg)} }
-.tw1 { animation: twinkle 2.8s ease-in-out infinite; }
-.tw2 { animation: twinkle 3.4s ease-in-out infinite 0.6s; }
-.tw3 { animation: twinkle 2.2s ease-in-out infinite 1.2s; }
-@keyframes twinkle { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.12;transform:scale(0.5)} }
+/* ── Character animation classes are defined in Login.css (global) ── */
 
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 900px) {
-  .sg-root { grid-template-columns: 1fr; grid-template-rows: 360px 1fr; }
-  .sg-left { min-height: 360px; }
+  .sg-root { grid-template-columns: 1fr; grid-template-rows: 340px 1fr; }
+  .sg-left { min-height: 340px; }
   .sg-scene { padding-bottom: 78px; }
   .sg-illustration { transform: translateY(-8px); }
-  .sg-svg { width: min(250px, 64vw); height: auto; }
-  .sg-left-footer { padding: 8px 24px 16px; }
-  .sg-right { padding: 24px 18px 40px; }
-  .sg-card { max-width: 100%; }
+  .sg-svg { width: min(230px, 60vw); height: auto; }
+  .sg-left-footer { padding: 8px 20px 16px; }
+  .sg-right { padding: 24px 16px 40px; }
+  .sg-card { max-width: 100%; padding: 26px 20px 22px; }
   .sg-type-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
 }
 
