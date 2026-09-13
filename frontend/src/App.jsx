@@ -14,6 +14,7 @@ import Calendar from './pages/Calendar';
 import AdminDashboard from './pages/AdminDashboard';
 import StudentMessages from './pages/StudentMessages';
 import { MotionProvider } from './context/MotionContext';
+import { ThemeProvider } from './context/ThemeContext';
 import DashboardLayout from './components/DashboardLayout';
 import authService from './services/authService';
 import './App.css';
@@ -31,6 +32,7 @@ function App() {
     return (
         <ErrorBoundary>
         <BrowserRouter>
+            <ThemeProvider>
             <AuthProvider>
                 <MotionProvider>
                     <Routes>
@@ -64,6 +66,7 @@ function App() {
                     </Routes>
                 </MotionProvider>
             </AuthProvider>
+            </ThemeProvider>
         </BrowserRouter>
         </ErrorBoundary>
     );
