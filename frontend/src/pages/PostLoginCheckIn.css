@@ -1,123 +1,60 @@
+/* Post-login check-in: same light paper as the rest of the app, one white card */
 .check-in-page {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #0f1117 0%, #1a1b1f 100%);
-    padding: 20px;
+    background: var(--paper);
+    padding: 24px 16px;
 }
 
 .check-in-card {
-    background: rgba(26, 27, 31, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    padding: 40px;
-    text-align: center;
-    max-width: 480px;
+    background: var(--surface);
+    color: var(--text);
+    border-radius: var(--r-lg);
+    padding: 34px 32px 30px;
+    max-width: 440px;
     width: 100%;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-2);
 }
 
-.check-in-icon {
-    font-size: 64px;
+.ci-eyebrow { font-size: 13px; color: var(--text-2); margin-bottom: 8px; }
+.check-in-card h1 { font-size: 28px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.ci-lead { font-size: 15px; color: var(--text-2); line-height: 1.55; margin-bottom: 22px; text-wrap: pretty; }
+.ci-lead strong { color: var(--text); font-weight: 600; }
+
+.ci-skill {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
     margin-bottom: 24px;
-    background: rgba(167, 139, 250, 0.1);
-    width: 100px;
-    height: 100px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin: 0 auto 24px;
+    border: 1px solid var(--line);
+    border-left-width: 3px;
+    border-radius: var(--r-md);
+    background: var(--paper);
 }
+.ci-skill.band-weak { border-left-color: var(--weak); }
+.ci-skill.band-fading { border-left-color: var(--fading); }
+.ci-skill.band-strong { border-left-color: var(--strong); }
+.ci-skill-name { font-weight: 600; font-size: 16px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ci-skill-strength { font-size: 13px; color: var(--text-2); white-space: nowrap; }
+.ci-skill-strength strong { font-family: var(--font-display); font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; margin-right: 2px; }
+.band-weak .ci-skill-strength strong { color: var(--weak); }
+.band-fading .ci-skill-strength strong { color: var(--fading); }
+.band-strong .ci-skill-strength strong { color: var(--strong); }
 
-.check-in-card h1 {
-    font-size: 28px;
-    color: #f1f5f9;
-    margin-bottom: 12px;
-}
-
-.check-in-card p {
-    font-size: 16px;
-    color: #94a3b8;
-    margin-bottom: 32px;
-    line-height: 1.6;
-}
-
-.recommended-skill {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 32px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.skill-name {
-    font-size: 20px;
-    font-weight: 700;
-    color: #ffffff;
-}
-
-.skill-strength {
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.check-in-actions {
-    display: flex;
-    gap: 16px;
-    justify-content: center;
-}
-
-.btn-skip,
-.btn-start {
-    padding: 14px 24px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    flex: 1;
-}
-
-.btn-skip {
-    background: transparent;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    color: #94a3b8;
-}
-
-.btn-skip:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: #f1f5f9;
-    border-color: rgba(255, 255, 255, 0.2);
-}
-
-.btn-start {
-    background: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
-    border: none;
-    color: white;
-    box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
-}
-
-.btn-start:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(167, 139, 250, 0.6);
-}
+.check-in-actions { display: flex; gap: 10px; }
+.check-in-actions .btn { flex: 1; padding: 12px 16px; }
 
 .check-in-container {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #0f1117;
+    background: var(--ink);
 }
 
 /* Ensure test modal shows properly over this page */
-.check-in-test-wrapper .quick-test-modal {
-    position: fixed;
-    z-index: 100;
-}
+.check-in-test-wrapper .quick-test-modal { position: fixed; z-index: 100; }

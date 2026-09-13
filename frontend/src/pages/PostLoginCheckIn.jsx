@@ -98,32 +98,30 @@ const PostLoginCheckIn = () => {
         );
     }
 
+    const strength = Math.round(recommendedSkill.currentStrength);
+    const band = strength >= 70 ? 'strong' : strength >= 40 ? 'fading' : 'weak';
+
     return (
         <div className="check-in-page">
             <div className="check-in-card">
-                <div className="check-in-icon">🧠</div>
-                <h1>Quick Knowledge Check</h1>
-                <p>
-                    Ready to sharpen your mind before you start?
-                    We recommend a quick refresh on:
+                <p className="ci-eyebrow">Before you start</p>
+                <h1>One quick test?</h1>
+                <p className="ci-lead">
+                    Your weakest skill right now is <strong>{recommendedSkill.name}</strong>. A two-minute test
+                    re-measures it and resets its clock.
                 </p>
 
-                <div className="recommended-skill">
-                    <span className="skill-name">{recommendedSkill.name}</span>
-                    <span className="skill-strength" style={{
-                        color: recommendedSkill.currentStrength >= 70 ? '#10b981' :
-                            recommendedSkill.currentStrength >= 40 ? '#f59e0b' : '#ef4444'
-                    }}>
-                        Current Strength: {recommendedSkill.currentStrength}%
-                    </span>
+                <div className={`ci-skill band-${band}`}>
+                    <span className="ci-skill-name">{recommendedSkill.name}</span>
+                    <span className="ci-skill-strength"><strong>{strength}%</strong> strength</span>
                 </div>
 
                 <div className="check-in-actions">
-                    <button className="btn-skip" onClick={handleSkip}>
-                        Skip for Now
+                    <button className="btn btn-ghost" onClick={handleSkip}>
+                        Not now
                     </button>
-                    <button className="btn-start" onClick={handleTakeTest}>
-                        Take Quick Test
+                    <button className="btn btn-primary" onClick={handleTakeTest}>
+                        Take the test
                     </button>
                 </div>
             </div>

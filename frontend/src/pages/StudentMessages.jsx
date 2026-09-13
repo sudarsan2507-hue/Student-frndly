@@ -3,9 +3,9 @@ import api from '../services/api';
 import './StudentMessages.css';
 
 const TYPE_CONFIG = {
-    tip: { label: 'Tip', color: '#6366f1', bg: '#eef2ff' },
-    meeting: { label: 'Meeting', color: '#0891b2', bg: '#ecfeff' },
-    alert: { label: 'Alert', color: '#dc2626', bg: '#fef2f2' },
+    tip: { label: 'Tip', color: 'var(--accent)', bg: 'var(--accent-soft)' },
+    meeting: { label: 'Meeting', color: 'var(--strong)', bg: 'var(--strong-soft)' },
+    alert: { label: 'Alert', color: 'var(--weak)', bg: 'var(--weak-soft)' },
 };
 
 const StudentMessages = () => {
@@ -39,7 +39,7 @@ const StudentMessages = () => {
         <div className="sm-page">
             <div className="sm-header">
                 <div>
-                    <h1 className="sm-title">Messages from Admin</h1>
+                    <h1 className="sm-title">Messages</h1>
                     <p className="sm-subtitle">
                         {loading ? 'Loading...' : `${messages.length} messages${unread > 0 ? ` · ${unread} unread` : ''}`}
                     </p>
@@ -51,7 +51,7 @@ const StudentMessages = () => {
             {!loading && messages.length === 0 && (
                 <div className="sm-empty">
                     <div className="sm-empty-icon">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" strokeWidth="1.5">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="1.5">
                             <rect x="2" y="4" width="20" height="16" rx="2" />
                             <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                         </svg>
