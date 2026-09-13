@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from './ThemeToggle';
 import './Sidebar.css';
 
 const NAV_ITEMS = {
@@ -51,6 +52,7 @@ const Sidebar = ({ unreadCount = 0 }) => {
             <div className="sidebar-header">
                 <span className="sidebar-brand">StudentFrndly</span>
                 {user?.role === 'admin' && <span className="sidebar-role-badge">Administrator</span>}
+                <ThemeToggle className="sidebar-theme" />
             </div>
 
             <nav className="sidebar-nav">
