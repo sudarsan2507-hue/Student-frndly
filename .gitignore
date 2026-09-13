@@ -24,3 +24,12 @@ Thumbs.db
 # Storage
 backend/data/*.json
 !backend/data/.gitkeep
+
+# Claude Code skills (cloned from upstream repos, not tracked)
+.claude/skills/
+
+# Reference art and generated portrait assets — a downloaded image of
+# unknown licence, so it (and everything derived from it) stays local
+# rather than going into git history.
+/Reference/
+frontend/src/assets/
