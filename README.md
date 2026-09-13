@@ -1,311 +1,123 @@
-# Skill Decay & Knowledge Half-Life Tracker
+# StudentFrndly — Skill Decay & Knowledge Half-Life Tracker
 
-A full-stack application to track skill decay and knowledge retention over time.
+Most learning apps track what you *studied*. This one tracks what you're *forgetting* — every skill decays on a half-life curve from the moment you stop practising it, and the app tells you exactly which one to touch today before it drops below "at risk."
 
-## Features
+<p align="center">
+  <img src="docs/screenshots/dashboard-light.png" alt="Dashboard, light mode" width="90%" />
+</p>
 
-- ✅ **Authentication**: JWT-based login system with protected routes
-- ✅ **Skill Tracking**: Create and track skills with time-based decay (5% per day)
-- ✅ **Practice Logging**: Mark skills as practiced to reset decay timer
-- ⏳ **Knowledge Decay Analysis**: Coming soon
+## What it actually does
+
+- **Decay-aware skills, not a static list.** Every skill has a live strength score computed from days-since-practice on a configurable half-life curve, floored at 10% so nothing ever reads as fully "dead."
+- **Tells you what to do next**, not just what happened — the dashboard leads with the single weakest skill and a one-click "Test now," not a wall of stats.
+- **Quick tests** log accuracy over time and feed back into the retention model, so scoring well on a test measurably restores strength, not just resets a timer.
+- **A 2-week forecast chart** — see where each skill lands if you leave it alone, before it happens.
+- **Calendar-driven scheduling**, a knowledge-by-topic breakdown, student ↔ admin messaging, and an admin dashboard for reviewing company-account requests.
+- **Auth**: email/password and Google OAuth, JWT-based, with role-gated routes (`student` / `admin`).
+- **Dark mode + 4 accent palettes**, applied consistently across every page via CSS custom properties — not a filter, a second designed palette.
+
+<p align="center">
+  <img src="docs/screenshots/dashboard-dark.png" alt="Dashboard, dark mode" width="90%" />
+</p>
+
+## Screenshots
+
+| Skills | Knowledge |
+|---|---|
+| ![Skills](docs/screenshots/skills.png) | ![Knowledge](docs/screenshots/knowledge.png) |
+
+| Calendar |
+|---|
+| ![Calendar](docs/screenshots/calendar.png) |
 
 ## Architecture
 
-- **Backend**: Node.js/Express with DB-agnostic data access layer
-- **Frontend**: React with Vite and React Router
-- **Storage**: In-memory/JSON (MySQL/Docker can be added later without changing API contracts)
-
-## Project Structure
+- **Backend**: Node.js/Express, `better-sqlite3` for storage (file-backed, zero setup — no separate DB server to run), JWT auth, rate-limited auth routes, structured logging.
+- **Frontend**: React 18 + Vite, `react-router-dom` v6, `framer-motion` for motion, plain per-component CSS on a shared design-token system (no CSS framework).
+- **Design system**: one token file (`frontend/src/index.css`) drives every color, radius, and shadow across the app — including a fully separate dark-mode palette, not an inverted light one.
 
 ```
-├── backend/          # Express API server
+├── backend/
 │   ├── src/
-│   │   ├── storage/      # DB-agnostic data layer (in-memory, JSON)
-│   │   ├── services/     # Business logic (auth, skills, decay calculations)
-│   │   ├── controllers/  # Request handlers
-│   │   ├── routes/       # API endpoints
-│   │   ├── middleware/   # Auth, validation, error handling
-│   │   └── models/       # Data models
-│   └── data/             # JSON storage files
-├── frontend/         # React application
+│   │   ├── storage/       # better-sqlite3 data-access layer
+│   │   ├── services/      # business logic (auth, skills, decay math, calendar, admin)
+│   │   ├── controllers/   # request handlers
+│   │   ├── routes/        # API endpoints
+│   │   └── middleware/    # auth, rate limiting, error handling
+│   └── data/               # sqlite db files
+├── frontend/
 │   └── src/
-│       ├── pages/        # Page components (Login, Dashboard, etc.)
-│       ├── components/   # Reusable UI components
-│       ├── services/     # API client and services
-│       └── context/      # React context (Auth)
-└── shared/           # Shared types and utilities
+│       ├── pages/          # Dashboard, Skills, Knowledge, Calendar, Messages, Admin, Login, Signup...
+│       ├── components/     # Sidebar, DecayChart, ThemeToggle, VoxelPortrait, StudyScene...
+│       ├── context/        # Auth, Theme, Motion
+│       └── services/       # API client
+└── docs/screenshots/        # images used in this README
 ```
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- npm or yarn
+- Node.js 18+
+- npm
 
-### Backend Setup
+### Backend
 
-1. Navigate to backend directory:
-   ```bash
-   cd backend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create `.env` file:
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-   The backend will run on `http://localhost:3000`
-
-### Frontend Setup
-
-1. Navigate to frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-   The frontend will run on `http://localhost:5173`
-
-## Mock User Credentials
-
-For testing the authentication system, use these credentials:
-
-| Email | Password | Role |
-|-------|----------|------|
-| student@test.com | password123 | student |
-| admin@test.com | admin123 | admin |
-
-## API Documentation
-
-### Authentication
-
-#### POST `/api/auth/login`
-
-Login with email and password.
-
-**Request:**
-```json
-{
-  "email": "student@test.com",
-  "password": "password123"
-}
+```bash
+cd backend
+npm install
+cp .env.example .env   # then fill in JWT_SECRET (and GOOGLE_CLIENT_ID if you want Google login)
+npm run dev            # http://localhost:3000
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "id": "1",
-      "email": "student@test.com",
-      "name": "Test Student",
-      "role": "student"
-    }
-  }
-}
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev             # http://localhost:5173, proxies /api to :3000
 ```
 
-### Skills (Protected)
+### Try it with seed data
 
-> **Note**: All skill endpoints require authentication. Include JWT token in Authorization header.
-
-#### POST `/api/skills`
-
-Create a new skill for the authenticated user.
-
-**Request:**
-```json
-{
-  "name": "React Development",
-  "category": "Programming",
-  "initialProficiency": 80
-}
+```bash
+cd backend
+node seed_db.js
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Skill created successfully",
-  "data": {
-    "id": "1707155234567",
-    "userId": "1",
-    "name": "React Development",
-    "category": "Programming",
-    "initialProficiency": 80,
-    "lastPracticedAt": "2026-02-05T17:40:34.567Z",
-    "currentStrength": 80,
-    "daysSinceLastPractice": 0,
-    "createdAt": "2026-02-05T17:40:34.567Z",
-    "updatedAt": "2026-02-05T17:40:34.567Z"
-  }
-}
-```
+Then log in with any of the seeded accounts (password `password123`), e.g. `olivia@test.com`.
 
-#### GET `/api/skills`
-
-Get all skills for the authenticated user with real-time decay calculations.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "1707155234567",
-      "userId": "1",
-      "name": "React Development",
-      "category": "Programming",
-      "initialProficiency": 80,
-      "lastPracticedAt": "2026-02-01T17:40:34.567Z",
-      "currentStrength": 64,
-      "daysSinceLastPractice": 4,
-      "createdAt": "2026-02-05T17:40:34.567Z",
-      "updatedAt": "2026-02-05T17:40:34.567Z"
-    }
-  ]
-}
-```
-
-#### PATCH `/api/skills/:id/practice`
-
-Mark a skill as practiced (resets decay timer).
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Skill marked as practiced",
-  "data": {
-    "id": "1707155234567",
-    "userId": "1",
-    "name": "React Development",
-    "category": "Programming",
-    "initialProficiency": 80,
-    "lastPracticedAt": "2026-02-05T17:45:00.000Z",
-    "currentStrength": 80,
-    "daysSinceLastPractice": 0,
-    "updatedAt": "2026-02-05T17:45:00.000Z"
-  }
-}
-```
-
-#### DELETE `/api/skills/:id`
-
-Delete a skill.
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Skill deleted successfully"
-}
-```
-
-### Protected Routes
-
-Protected endpoints require the JWT token in the Authorization header:
+## Skill decay model
 
 ```
-Authorization: Bearer <token>
+currentStrength = max(10, initialProficiency - (initialProficiency × decayRate × daysSinceLastPractice))
 ```
 
-### Health Check
+- Decays daily from the last practice/test date, floored at **10%** — a skill is never shown as fully gone.
+- Recomputed live on every read; nothing is a stale cached number.
+- Bands: **Mastered** (≥70%), **Fading** (40–69%), **At risk** (<40%) — the same thresholds are used on both the backend and the frontend so a skill can't read differently on two pages.
 
-#### GET `/api/health`
+## API surface (selected)
 
-Check if the server is running.
+All routes below require `Authorization: Bearer <token>` unless noted.
 
-**Response:**
-```json
-{
-  "status": "ok",
-  "message": "Server is running"
-}
-```
+| Method | Route | What it does |
+|---|---|---|
+| `POST` | `/api/auth/login` | Email/password login |
+| `POST` | `/api/auth/google` | Google OAuth login |
+| `POST` | `/api/skills` | Create a skill |
+| `GET` | `/api/skills` | List skills with live decay applied |
+| `PATCH` | `/api/skills/:id/practice` | Mark practiced — resets the decay timer |
+| `POST` | `/api/quick-test/:skillId/generate` | Generate a quick test for a skill |
+| `POST` | `/api/quick-test/submit` | Submit answers — score feeds back into retention |
+| `GET` | `/api/calendar` | Scheduled practice events |
+| `GET` | `/api/messages` | Student ↔ admin messages |
+| `GET` | `/api/admin/analytics` | *(admin)* Aggregate stats across all students |
+| `GET` | `/api/health` | Liveness check |
 
-## Environment Variables
+## Roadmap
 
-### Backend (.env)
-
-```
-PORT=3000
-NODE_ENV=development
-STORAGE_TYPE=json
-JSON_STORAGE_PATH=./data
-
-# JWT Configuration
-JWT_SECRET=dev-secret-key-change-in-production-2026
-JWT_EXPIRES_IN=24h
-```
-
-## Development
-
-- Backend uses **nodemon** for hot-reload during development
-- Frontend uses **Vite** for fast HMR (Hot Module Replacement)
-- All API calls from frontend are proxied through Vite to avoid CORS issues
-
-## Authentication Flow
-
-1. User enters credentials on `/login` page
-2. Frontend sends POST request to `/api/auth/login`
-3. Backend validates credentials using bcrypt
-4. Backend generates JWT token and returns user data
-5. Frontend stores token in localStorage
-6. Token is automatically attached to all API requests via Axios interceptor
-7. Protected routes check authentication status before rendering
-8. Logout clears token and redirects to login
-
-## Skill Decay System
-
-Skills use a simple time-based decay formula:
-
-**Formula:** `currentStrength = max(10, initialProficiency - (initialProficiency × 0.05 × daysSinceLastPractice))`
-
-- **Decay Rate**: 5% of initial proficiency per day
-- **Minimum Strength**: Skills never drop below 10%
-- **Calculation**: Real-time on every API call
-- **Reset**: Marking as practiced updates `lastPracticedAt` to current time
-
-**Example:**
-- Skill created with 80% proficiency
-- After 5 days: 80 - (80 × 0.05 × 5) = **60%**
-- After 10 days: 80 - (80 × 0.05 × 10) = **40%**
-- After 20 days: max(10, 80 - 80) = **10%** (minimum)
-
-**Strength Categories:**
-- **Strong** (≥70%): Green
-- **Moderate** (40-69%): Orange
-- **Weak** (<40%): Red
-
-## Next Steps
-
-- [ ] Implement skill management (CRUD operations)
-- [ ] Add knowledge tracking functionality
-- [ ] Implement decay calculation algorithms
-- [ ] Add data visualization for skill decay
-- [ ] Migrate from in-memory to MySQL storage
-
+- [ ] Per-skill spaced-repetition scheduling suggestions (beyond "practice today")
+- [ ] Export a skill's history as CSV
+- [ ] Extend the dark-mode/palette toggle and voxel-portrait treatment to the Signup page for full visual consistency
+- [ ] Automated test coverage for the decay math and retention endpoints
