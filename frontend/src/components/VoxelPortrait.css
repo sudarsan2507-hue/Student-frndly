@@ -1,0 +1,65 @@
+.voxel-portrait {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.voxel-stage {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* Reserved chrome: top bar + tagline above, and on narrow viewports the
+   bottom-docked ask-bubble/card below — kept in CSS (not JS) so the
+   canvas/real-image fit logic just measures this box directly. Absolutely
+   positioned (not padding on .voxel-stage) so the canvas and the real
+   image both size against the SAME reserved box — padding on a
+   position:relative ancestor doesn't shrink an inset:0 absolute child. */
+.voxel-content {
+    position: absolute;
+    top: 130px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 920px) {
+    .voxel-content { bottom: 40vh; }
+}
+
+/* The canvas's width/height ATTRIBUTES are set in device pixels (for a
+   crisp render on retina screens) — without this, the element would
+   render at that oversized pixel count as its CSS size too. */
+.voxel-canvas {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transition: opacity 0.8s ease, filter 0.8s ease;
+}
+.voxel-canvas.is-out { opacity: 0; filter: blur(6px); }
+
+/* Real full-resolution image — crossfades in once the voxel build
+   finishes, in the same box the canvas was drawn into. A plain flex
+   child (not absolutely positioned/inset), sized by max-width/height so
+   it keeps its natural aspect ratio and never sits flush against the
+   viewport edges or the tagline above — much less fiddly than trying to
+   reproduce object-fit:contain via percentage insets. */
+.voxel-real {
+    max-width: 92%;
+    max-height: 92%;
+    width: auto;
+    height: auto;
+    opacity: 0;
+    transform: scale(1.035);
+    transition: opacity 1s ease 0.1s, transform 1s ease 0.1s;
+    pointer-events: none;
+    user-select: none;
+}
+.voxel-real.is-in { opacity: 1; transform: scale(1); }
