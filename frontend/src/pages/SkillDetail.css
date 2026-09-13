@@ -58,15 +58,15 @@
     align-items: center;
     padding: 7px 12px;
     border-radius: 999px;
-    background: #eff6ff;
-    color: #1d4ed8;
+    background: var(--accent-soft);
+    color: var(--accent);
     font-size: 13px;
     font-weight: 700;
 }
 
-.detail-pill.good { background: #ecfdf5; color: #059669; }
-.detail-pill.warn { background: #fffbeb; color: #d97706; }
-.detail-pill.danger { background: #fef2f2; color: #dc2626; }
+.detail-pill.good { background: var(--strong-soft); color: var(--strong); }
+.detail-pill.warn { background: var(--fading-soft); color: var(--fading); }
+.detail-pill.danger { background: var(--weak-soft); color: var(--weak); }
 
 .hero-score-card {
     min-width: 230px;
@@ -82,7 +82,7 @@
 
 .hero-score-label,
 .hero-score-sub,
-.stat-label,
+.stats-grid .stat-label,
 .mini-grid span,
 .threshold-result span {
     color: var(--text-secondary);
@@ -168,7 +168,7 @@
     width: 220px;
     height: 220px;
     border-radius: 50%;
-    background: conic-gradient(var(--retention-accent, #6366f1) calc(var(--retention-progress, 60) * 1%), #e2e8f0 0);
+    background: conic-gradient(var(--retention-accent, var(--accent)) calc(var(--retention-progress, 60) * 1%), var(--surface-2) 0);
     display: grid;
     place-items: center;
     margin: 0 auto;
@@ -360,9 +360,9 @@
     margin-top: 16px;
     padding: 12px 14px;
     border-radius: 14px;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #dc2626;
+    background: var(--weak-soft);
+    border: 1px solid var(--weak);
+    color: var(--weak);
     font-weight: 600;
 }
 

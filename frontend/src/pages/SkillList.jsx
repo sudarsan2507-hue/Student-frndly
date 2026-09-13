@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import QuickTest from '../components/QuickTest';
 import TestResults from '../components/TestResults';
+import { Sparkline } from '../components/DecayChart';
 import skillService from '../services/skillService';
 import retentionService from '../services/retentionService';
+import { bandOf, bandLabel, AT_RISK } from '../utils/decayCalculations';
 import './SkillList.css';
 
 const SkillList = () => {
@@ -29,6 +31,7 @@ const SkillList = () => {
     const [formLoading, setFormLoading] = useState(false);
     const [retentionMap, setRetentionMap] = useState({});
     const [loadingRetention, setLoadingRetention] = useState({});
+    const [busy, setBusy] = useState({});
 
     useEffect(() => {
         loadSkills();
@@ -51,14 +54,14 @@ const SkillList = () => {
             const response = await skillService.getUserSkills();
             setSkills(response.data || []);
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to load skills');
+            setError(err.response?.data?.message || "Couldn't load your skills.");
         } finally {
             setLoading(false);
         }
     };
 
     // Derived State: Today's Skills (Highest Risk)
-    // Priority: Strength < 50% OR Not practiced > 7 days
+    // Priority: Strength < 60% OR Not practiced > 7 days
     const filteredSkills = skills.filter(skill => {
         const query = searchQuery.trim().toLowerCase();
         const matchesSearch = !query || skill.name?.toLowerCase().includes(query) || skill.category?.toLowerCase().includes(query);
@@ -73,6 +76,8 @@ const SkillList = () => {
         .sort((a, b) => a.currentStrength - b.currentStrength) // Weakest first
         .slice(0, 3);
 
+    const atRiskCount = skills.filter(s => s.currentStrength < AT_RISK).length;
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -86,7 +91,7 @@ const SkillList = () => {
         setFormError('');
 
         if (!formData.name.trim()) {
-            setFormError('Skill name is required');
+            setFormError('Give the skill a name.');
             return;
         }
 
@@ -107,13 +112,14 @@ const SkillList = () => {
             setShowForm(false);
             await loadSkills();
         } catch (err) {
-            setFormError(err.response?.data?.message || 'Failed to create skill');
+            setFormError(err.response?.data?.message || "Couldn't create the skill.");
         } finally {
             setFormLoading(false);
         }
     };
 
     const handleMarkAsPracticed = async (skillId) => {
+        setBusy(prev => ({ ...prev, [skillId]: true }));
         try {
             await skillService.markAsPracticed(skillId);
             await loadSkills(); // Refresh to show new date/strength
@@ -123,21 +129,23 @@ const SkillList = () => {
                 await loadSkills();
                 alert('Skills refreshed. Please try again.');
             } else {
-                alert(err.response?.data?.message || 'Failed to update skill');
+                alert(err.response?.data?.message || "Couldn't update the skill.");
             }
+        } finally {
+            setBusy(prev => ({ ...prev, [skillId]: false }));
         }
     };
 
-    const handleDelete = async (skillId) => {
-        if (!window.confirm('Are you sure you want to delete this skill?')) {
+    const handleDelete = async (skill) => {
+        if (!window.confirm(`Delete "${skill.name}"? Its practice history goes with it.`)) {
             return;
         }
 
         try {
-            await skillService.deleteSkill(skillId);
+            await skillService.deleteSkill(skill.id);
             await loadSkills();
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to delete skill');
+            alert(err.response?.data?.message || "Couldn't delete the skill.");
         }
     };
 
@@ -172,12 +180,6 @@ const SkillList = () => {
         setTestResults(null);
     };
 
-    const getStrengthColor = (strength) => {
-        if (strength >= 70) return '#10b981';
-        if (strength >= 40) return '#f59e0b';
-        return '#ef4444';
-    };
-
     const fetchPrediction = async (skillId) => {
         if (!skillId) return;
         if (retentionMap[skillId]) return; // cached
@@ -193,336 +195,229 @@ const SkillList = () => {
         }
     };
 
-    const getDecayStatus = (strength) => {
-        if (strength >= 70) return { label: 'Strong', color: '#10b981', icon: '📈' };
-        if (strength >= 40) return { label: 'Moderate', color: '#f59e0b', icon: '📊' };
-        return { label: 'Weak', color: '#ef4444', icon: '📉' };
-    };
-
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const now = new Date();
         const diffTime = Math.abs(now - date);
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-        if (diffDays === 0) return 'Today';
-        if (diffDays === 1) return 'Yesterday';
+        if (diffDays === 0) return 'today';
+        if (diffDays === 1) return 'yesterday';
         return `${diffDays} days ago`;
     };
 
+    const openForm = () => { setShowForm(true); setFormError(''); };
+
     return (
-        <div className="skills-page">
-            {/* Header Actions */}
-            <div className="skills-header-top">
-                <div className="skills-search-panel">
-                    <input
-                        type="search"
-                        className="skills-search-input"
-                        placeholder="Search skills or categories..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <div className="skills-filter-chips">
-                        {categories.map(category => (
-                            <button
-                                key={category}
-                                type="button"
-                                className={`filter-chip ${selectedCategory === category ? 'active' : ''}`}
-                                onClick={() => setSelectedCategory(category)}
-                            >
-                                {category}
-                            </button>
-                        ))}
-                    </div>
+        <div className="sl">
+            <header className="sl-head">
+                <div>
+                    <h1>Skills</h1>
+                    {!loading && !error && skills.length > 0 && (
+                        <p className="sl-count">
+                            {skills.length} tracked
+                            {atRiskCount > 0 && <> · <span className="is-weak">{atRiskCount} at risk</span></>}
+                        </p>
+                    )}
                 </div>
-
-                <button
-                    className="add-skill-btn"
-                    onClick={() => setShowForm(!showForm)}
-                >
-                    <span className="btn-icon">+</span>
-                    Add New Skill
+                <button className="btn btn-primary" onClick={() => showForm ? setShowForm(false) : openForm()}>
+                    {showForm ? 'Close' : 'Add a skill'}
                 </button>
-            </div>
+            </header>
 
-            {/* Today's Skills Section (Action Hub) */}
-            {!loading && !error && focusSkills.length > 0 && (
-                <div className="todays-skills-section">
-                    <div className="section-header">
-                        <h2>🔥 Today's Priorities</h2>
-                        <p>These skills are at risk of decay. Give them some attention!</p>
-                    </div>
-                    <div className="focus-grid">
-                        {focusSkills.map(skill => (
-                            <div key={skill.id} className="focus-skill-card">
-                                <div className="focus-header">
-                                    <h3>{skill.name}</h3>
-                                    <span className="focus-badge" style={{
-                                        backgroundColor: skill.currentStrength < 40 ? '#fee2e2' : '#fef3c7',
-                                        color: skill.currentStrength < 40 ? '#ef4444' : '#f59e0b'
-                                    }}>
-                                        {skill.currentStrength < 40 ? 'Critical' : 'Needs Review'}
-                                    </span>
-                                </div>
-                                <div className="focus-bar-container">
-                                    <div className="focus-bar-bg">
-                                        <div
-                                            className="focus-bar-fill"
-                                            style={{
-                                                width: `${skill.currentStrength}%`,
-                                                backgroundColor: getStrengthColor(skill.currentStrength)
-                                            }}
-                                        />
-                                    </div>
-                                    <span className="focus-strength">{skill.currentStrength}%</span>
-                                </div>
-                                <div className="focus-actions">
-                                    <button className="btn-tiny primary" onClick={() => handleStartTest(skill)}>Take Test</button>
-                                    <button className="btn-tiny secondary" onClick={() => handleMarkAsPracticed(skill.id)}>Mark Reviewed</button>
-                                </div>
-                                <button className="btn-tiny tertiary" onClick={() => handleOpenDetails(skill.id)}>
-                                    View details
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Add Skill Form */}
+            {/* Add Skill Form — inline, under the header */}
             {showForm && (
-                <div className="skill-form-card">
-                    <div className="form-header">
-                        <h3>Add New Skill</h3>
-                        <button className="close-btn" onClick={() => setShowForm(false)}>×</button>
-                    </div>
-                    <form onSubmit={handleSubmit}>
-                        {formError && (
-                            <div className="form-error">{formError}</div>
-                        )}
-
-                        <div className="form-group">
-                            <label>Skill Name</label>
+                <form className="sl-form" onSubmit={handleSubmit}>
+                    {formError && <p className="sl-form-error" role="alert">{formError}</p>}
+                    <div className="sl-form-grid">
+                        <label className="sl-field sl-field--wide">
+                            <span>Name</span>
                             <input
                                 type="text"
                                 name="name"
                                 value={formData.name}
                                 onChange={handleInputChange}
-                                placeholder="e.g., React Development"
+                                placeholder="React hooks, French verbs, SQL joins…"
+                                disabled={formLoading}
+                                autoFocus
+                            />
+                        </label>
+                        <label className="sl-field">
+                            <span>Category</span>
+                            <select name="category" value={formData.category} onChange={handleInputChange} disabled={formLoading}>
+                                <option>General</option>
+                                <option>Programming</option>
+                                <option>Design</option>
+                                <option>Language</option>
+                                <option>Business</option>
+                            </select>
+                        </label>
+                        <label className="sl-field">
+                            <span>How well you know it now <b className="tnum">{formData.initialProficiency}%</b></span>
+                            <input
+                                type="range"
+                                name="initialProficiency"
+                                min="0"
+                                max="100"
+                                value={formData.initialProficiency}
+                                onChange={handleInputChange}
                                 disabled={formLoading}
                             />
-                        </div>
-
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Category</label>
-                                <select
-                                    name="category"
-                                    value={formData.category}
-                                    onChange={handleInputChange}
-                                    disabled={formLoading}
-                                >
-                                    <option>General</option>
-                                    <option>Programming</option>
-                                    <option>Design</option>
-                                    <option>Language</option>
-                                    <option>Business</option>
-                                </select>
-                            </div>
-
-                            <div className="form-group">
-                                <label>Initial Proficiency ({formData.initialProficiency}%)</label>
-                                <input
-                                    type="range"
-                                    name="initialProficiency"
-                                    min="0"
-                                    max="100"
-                                    value={formData.initialProficiency}
-                                    onChange={handleInputChange}
-                                    disabled={formLoading}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="form-actions">
-                            <button type="button" className="btn-cancel" onClick={() => setShowForm(false)}>
-                                Cancel
-                            </button>
-                            <button type="submit" className="btn-submit" disabled={formLoading}>
-                                {formLoading ? 'Creating...' : 'Create Skill'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                        </label>
+                    </div>
+                    <div className="sl-form-actions">
+                        <button type="button" className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
+                        <button type="submit" className="btn btn-primary" disabled={formLoading}>
+                            {formLoading ? 'Saving…' : 'Save skill'}
+                        </button>
+                    </div>
+                </form>
             )}
 
             {/* Loading/Error/Empty States */}
             {loading && (
-                <div className="loading-state">
-                    <div className="spinner"></div>
-                    <p>Loading skills...</p>
+                <div className="sl-skeleton" aria-busy="true">
+                    {[0, 1, 2, 3].map(i => <span key={i} className="sk" />)}
                 </div>
             )}
 
             {error && !loading && (
-                <div className="error-state">
-                    <span className="error-icon">⚠️</span>
+                <div className="sl-error">
                     <p>{error}</p>
-                    <button onClick={loadSkills} className="retry-btn">Retry</button>
+                    <button onClick={loadSkills} className="btn btn-ghost">Try again</button>
                 </div>
             )}
 
-            {!loading && !error && skills.length === 0 && (
-                <div className="empty-state">
-                    <div className="empty-icon">🎯</div>
-                    <h3>No skills yet</h3>
-                    <p>Start tracking your skills by creating your first one!</p>
-                    <button className="add-skill-btn" onClick={() => setShowForm(true)}>
-                        <span className="btn-icon">+</span>
-                        Add Your First Skill
-                    </button>
+            {!loading && !error && skills.length === 0 && !showForm && (
+                <div className="sl-empty">
+                    <h2>Nothing tracked yet</h2>
+                    <p>Add a skill with a rough sense of how well you know it. From then on this page tells you when it starts to slip.</p>
+                    <button className="btn btn-primary" onClick={openForm}>Add your first skill</button>
                 </div>
             )}
 
-            {/* All Skills Grid */}
             {!loading && !error && skills.length > 0 && (
                 <>
-                    <h2 className="grid-title">All Skills</h2>
-                    <div className="skills-grid">
-                        {filteredSkills.length === 0 ? (
-                            <div className="empty-state compact">
-                                <div className="empty-icon">🔎</div>
-                                <h3>No matching skills</h3>
-                                <p>Try a different search term or category filter.</p>
-                                <button
-                                    className="btn-submit"
-                                    onClick={() => {
-                                        setSearchQuery('');
-                                        setSelectedCategory('All');
-                                    }}
-                                >
-                                    Clear filters
-                                </button>
+                    <div className="sl-toolbar">
+                        <input
+                            type="search"
+                            className="sl-search"
+                            placeholder="Search by name or category"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            aria-label="Search skills"
+                        />
+                        {categories.length > 2 && (
+                            <div className="sl-chips" role="tablist" aria-label="Filter by category">
+                                {categories.map(category => (
+                                    <button
+                                        key={category}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={selectedCategory === category}
+                                        className={`sl-chip ${selectedCategory === category ? 'active' : ''}`}
+                                        onClick={() => setSelectedCategory(category)}
+                                    >
+                                        {category}
+                                    </button>
+                                ))}
                             </div>
-                        ) : filteredSkills.map((skill) => {
-                            const decayStatus = getDecayStatus(skill.currentStrength);
-                            const strengthColor = getStrengthColor(skill.currentStrength);
-
-                            return (
-                                <div key={skill.id} className="skill-card">
-                                    <div className="skill-card-header">
-                                        <div className="skill-title-section">
-                                            <h3 className="skill-name">{skill.name}</h3>
-                                            <span className="skill-category">{skill.category}</span>
-                                        </div>
-                                        <button
-                                            className="delete-btn"
-                                            onClick={() => handleDelete(skill.id)}
-                                            title="Delete skill"
-                                        >
-                                            🗑️
-                                        </button>
-                                    </div>
-
-                                    {/* Circular Progress */}
-                                    <div className="skill-strength-circle">
-                                        <svg className="progress-ring" width="140" height="140">
-                                            <circle
-                                                className="progress-ring-bg"
-                                                cx="70"
-                                                cy="70"
-                                                r="60"
-                                            />
-                                            <circle
-                                                className="progress-ring-fill"
-                                                cx="70"
-                                                cy="70"
-                                                r="60"
-                                                stroke={strengthColor}
-                                                strokeDasharray={`${skill.currentStrength * 3.77} 377`}
-                                            />
-                                        </svg>
-                                        <div className="progress-text">
-                                            <span className="strength-value" style={{ color: strengthColor }}>
-                                                {skill.currentStrength}%
-                                            </span>
-                                            <span className="strength-label">Strength</span>
-                                            {retentionMap[skill.id] && (
-                                                <div className="retention-info" style={{ marginTop: 6 }}>
-                                                    <small style={{ color: strengthColor }}>Retention: <strong>{retentionMap[skill.id].retention}%</strong></small>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Decay Status */}
-                                    <div className="decay-status" style={{ borderColor: decayStatus.color + '40' }}>
-                                        <span className="decay-icon">{decayStatus.icon}</span>
-                                        <span className="decay-label" style={{ color: decayStatus.color }}>
-                                            {decayStatus.label}
-                                        </span>
-                                    </div>
-
-                                    {/* Metadata */}
-                                    <div className="skill-metadata">
-                                        <div className="metadata-item">
-                                            <span className="metadata-label">Last Practiced</span>
-                                            <span className="metadata-value">{formatDate(skill.lastPracticedAt)}</span>
-                                        </div>
-                                        <div className="metadata-item">
-                                            <span className="metadata-label">Days Idle</span>
-                                            <span className="metadata-value">{Math.floor(skill.daysSinceLastPractice || 0)}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="skill-actions-grid">
-                                        <button
-                                            className="action-btn practice-btn"
-                                            onClick={() => handleMarkAsPracticed(skill.id)}
-                                            title="Update last practiced date"
-                                        >
-                                            <span>✓</span>
-                                            Practiced
-                                        </button>
-                                        <button
-                                            className="action-btn test-btn"
-                                            onClick={() => handleStartTest(skill)}
-                                            title="Take a quick test"
-                                        >
-                                            <span>📝</span>
-                                            Test
-                                        </button>
-                                        <button
-                                            className="action-btn schedule-btn"
-                                            onClick={() => handleSchedule(skill)}
-                                            title="Schedule practice session"
-                                        >
-                                            <span>📅</span>
-                                            Schedule
-                                        </button>
-                                        <button
-                                            className="action-btn details-btn"
-                                            onClick={() => handleOpenDetails(skill.id)}
-                                            title="Open detailed retention page"
-                                        >
-                                            <span>📌</span>
-                                            Details
-                                        </button>
-                                        <button
-                                            className="action-btn predict-btn"
-                                            onClick={() => fetchPrediction(skill.id)}
-                                            title="Predict retention"
-                                            disabled={!!loadingRetention[skill.id]}
-                                        >
-                                            <span>🔮</span>
-                                            {loadingRetention[skill.id] ? 'Predicting...' : 'Predict'}
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                        )}
                     </div>
+
+                    {/* Needs attention — the weakest three, with the two actions that matter */}
+                    {focusSkills.length > 0 && (
+                        <section className="sl-focus" aria-labelledby="focus-title">
+                            <div className="sl-section-head">
+                                <h2 id="focus-title">Needs attention</h2>
+                                <p>Weakest first. A test resets the clock and re-measures; marking practised just resets the clock.</p>
+                            </div>
+                            <ul className="sl-focus-list">
+                                {focusSkills.map(skill => {
+                                    const band = bandOf(skill.currentStrength);
+                                    const prediction = retentionMap[skill.id];
+                                    return (
+                                        <li key={skill.id} className={`sl-focus-item band-${band}`}>
+                                            <div className="sl-focus-main">
+                                                <button className="sl-name" onClick={() => handleOpenDetails(skill.id)}>{skill.name}</button>
+                                                <span className="sl-focus-meta">
+                                                    <strong>{Math.round(skill.currentStrength)}%</strong> · {bandLabel[band].toLowerCase()} · practised {formatDate(skill.lastPracticedAt)}
+                                                    {prediction?.retention != null && <> · predicted retention {Math.round(prediction.retention)}%</>}
+                                                </span>
+                                            </div>
+                                            <div className="sl-focus-actions">
+                                                <button className="btn btn-primary btn-small" onClick={() => handleStartTest(skill)}>Test now</button>
+                                                <button className="btn btn-small" onClick={() => handleMarkAsPracticed(skill.id)} disabled={!!busy[skill.id]}>
+                                                    {busy[skill.id] ? 'Saving…' : 'Mark practised'}
+                                                </button>
+                                            </div>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </section>
+                    )}
+
+                    {/* All skills */}
+                    <section className="sl-all" aria-labelledby="all-title">
+                        <div className="sl-section-head row">
+                            <h2 id="all-title">All skills</h2>
+                            {filteredSkills.length !== skills.length && (
+                                <span className="sl-filter-note">{filteredSkills.length} of {skills.length}</span>
+                            )}
+                        </div>
+
+                        {filteredSkills.length === 0 ? (
+                            <div className="sl-empty compact">
+                                <p>Nothing matches that search or category.</p>
+                                <button className="link" onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}>Clear filters</button>
+                            </div>
+                        ) : (
+                            <ul className="sl-rows">
+                                {filteredSkills.map((skill) => {
+                                    const band = bandOf(skill.currentStrength);
+                                    const prediction = retentionMap[skill.id];
+                                    return (
+                                        <li key={skill.id} className={`sl-row band-${band}`}>
+                                            <div className="sl-row-main">
+                                                <button className="sl-name" onClick={() => handleOpenDetails(skill.id)} title="Open details">
+                                                    {skill.name}
+                                                </button>
+                                                <span className="sl-row-meta">
+                                                    {skill.category} · practised {formatDate(skill.lastPracticedAt)}
+                                                    {prediction?.retention != null && <> · predicted {Math.round(prediction.retention)}%</>}
+                                                </span>
+                                            </div>
+
+                                            <Sparkline skill={skill} width={96} height={26} />
+
+                                            <div className="sl-row-strength">
+                                                <span className="sl-bar" aria-hidden="true"><i style={{ width: `${skill.currentStrength}%` }} /></span>
+                                                <strong>{Math.round(skill.currentStrength)}%</strong>
+                                                <em>{bandLabel[band]}</em>
+                                            </div>
+
+                                            <div className="sl-row-actions">
+                                                <button className="btn btn-small" onClick={() => handleStartTest(skill)}>Test</button>
+                                                <button className="link" onClick={() => handleMarkAsPracticed(skill.id)} disabled={!!busy[skill.id]}>
+                                                    {busy[skill.id] ? 'Saving…' : 'Practised'}
+                                                </button>
+                                                <button className="link" onClick={() => handleSchedule(skill)}>Schedule</button>
+                                                {!prediction && (
+                                                    <button className="link" onClick={() => fetchPrediction(skill.id)} disabled={!!loadingRetention[skill.id]}>
+                                                        {loadingRetention[skill.id] ? 'Predicting…' : 'Predict'}
+                                                    </button>
+                                                )}
+                                                <button className="sl-delete" onClick={() => handleDelete(skill)} aria-label={`Delete ${skill.name}`} title="Delete">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                                                </button>
+                                            </div>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        )}
+                    </section>
                 </>
             )}
 

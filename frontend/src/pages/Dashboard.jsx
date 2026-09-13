@@ -1,38 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import skillService from '../services/skillService';
 import noteService from '../services/noteService';
 import PageTransition from '../components/PageTransition';
-import { motion } from 'framer-motion';
+import DecayChart, { Sparkline } from '../components/DecayChart';
+import QuickTest from '../components/QuickTest';
+import TestResults from '../components/TestResults';
+import { useAuth } from '../context/AuthContext';
+import { bandOf, bandLabel, daysUntil, AT_RISK, MASTERED } from '../utils/decayCalculations';
 import './Dashboard.css';
 
-const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-        opacity: 1,
-        transition: {
-            staggerChildren: 0.1
-        }
-    }
+const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.07 } } };
+const itemVariants = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } };
+
+const relativeDays = (days) => {
+    if (days < 1) return 'today';
+    if (days < 2) return 'yesterday';
+    return `${Math.round(days)} days ago`;
 };
 
-const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
+/** One-sentence summary of the student's situation — the page's headline. */
+const summarise = (skills) => {
+    if (!skills.length) return { lead: 'Nothing is being tracked yet.', sub: 'Add a skill and this page will show you how fast it fades.' };
+    const weak = skills.filter((s) => s.currentStrength < AT_RISK);
+    const fading = skills.filter((s) => s.currentStrength >= AT_RISK && s.currentStrength < MASTERED);
+    const strong = skills.length - weak.length - fading.length;
+    if (weak.length === skills.length) {
+        return { lead: `All ${skills.length} of your skills are at risk.`, sub: 'One quick test today starts rebuilding the strongest of them.' };
+    }
+    if (weak.length) {
+        return {
+            lead: `${weak.length} of ${skills.length} skills ${weak.length === 1 ? 'is' : 'are'} at risk.`,
+            sub: `${fading.length} more ${fading.length === 1 ? 'is' : 'are'} fading. Practise one today to hold it above ${AT_RISK}%.`,
+        };
+    }
+    const soonest = fading.map((s) => ({ s, d: daysUntil(s, AT_RISK) })).filter((x) => x.d != null).sort((a, b) => a.d - b.d)[0];
+    if (soonest) {
+        return {
+            lead: 'Everything is holding, for now.',
+            sub: `${soonest.s.name} drops below ${AT_RISK}% in about ${Math.max(1, Math.round(soonest.d))} days unless you practise it.`,
+        };
+    }
+    return { lead: `All ${strong} skills are strong.`, sub: 'Keep the streak. The chart shows how quickly that changes without practice.' };
 };
 
 const Dashboard = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [skills, setSkills] = useState([]);
     const [notes, setNotes] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [currentMonth, setCurrentMonth] = useState(new Date());
     const [error, setError] = useState('');
+    const [activeTest, setActiveTest] = useState(null);
+    const [testResults, setTestResults] = useState(null);
 
-    useEffect(() => {
-        loadSkills();
-        loadTodayNotes();
-    }, []);
+    useEffect(() => { loadSkills(); loadTodayNotes(); }, []);
 
     const loadSkills = async () => {
         try {
@@ -41,7 +64,7 @@ const Dashboard = () => {
             const response = await skillService.getUserSkills();
             setSkills(response.data || []);
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to load skills');
+            setError(err.response?.data?.message || "Couldn't load your skills.");
         } finally {
             setLoading(false);
         }
@@ -49,8 +72,7 @@ const Dashboard = () => {
 
     const loadTodayNotes = async () => {
         try {
-            const today = new Date();
-            const dateString = today.toISOString().split('T')[0];
+            const dateString = new Date().toISOString().split('T')[0];
             const response = await noteService.getNotes(dateString);
             setNotes(response.data || []);
         } catch {
@@ -58,263 +80,160 @@ const Dashboard = () => {
         }
     };
 
-    // Calculate statistics
-    const totalSkills = skills.length;
-    const averageStrength = skills.length > 0
-        ? Math.round(skills.reduce((sum, s) => sum + s.currentStrength, 0) / skills.length)
-        : 0;
+    const sorted = useMemo(() => [...skills].sort((a, b) => a.currentStrength - b.currentStrength), [skills]);
+    const stats = useMemo(() => ({
+        total: skills.length,
+        average: skills.length ? Math.round(skills.reduce((sum, s) => sum + s.currentStrength, 0) / skills.length) : 0,
+        mastered: skills.filter((s) => s.currentStrength >= MASTERED).length,
+        atRisk: skills.filter((s) => s.currentStrength < AT_RISK).length,
+    }), [skills]);
+    const summary = summarise(skills);
+    const priority = sorted[0];
 
-    // Derived state
-    const weakSkills = skills.filter(s => s.currentStrength < 40).length;
-    const masteredSkills = skills.filter(s => s.currentStrength >= 80).length;
+    const today = new Date();
+    const firstName = (user?.name || user?.email || '').split(/[\s@]/)[0];
 
-    // Render mini calendar for dashboard
     const renderMiniCalendar = () => {
-        const today = new Date();
-        const year = currentMonth.getFullYear();
-        const month = currentMonth.getMonth();
-
-        // Get first day of month and total days
+        const year = today.getFullYear(), month = today.getMonth();
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const daysInPrevMonth = new Date(year, month, 0).getDate();
-
-        // Adjust for Monday start (0 = Sunday, we want Monday = 0)
         const startOffset = firstDay === 0 ? 6 : firstDay - 1;
-
-        const days = [];
-
-        // Previous month days
-        for (let i = startOffset - 1; i >= 0; i--) {
-            days.push(<span key={`prev-${i}`} className="muted">{daysInPrevMonth - i}</span>);
+        const cells = [];
+        for (let i = 0; i < startOffset; i++) cells.push(<span key={`p${i}`} />);
+        for (let d = 1; d <= daysInMonth; d++) {
+            cells.push(<span key={d} className={d === today.getDate() ? 'active' : ''}>{d}</span>);
         }
-
-        // Current month days
-        for (let day = 1; day <= daysInMonth; day++) {
-            const isToday =
-                day === today.getDate() &&
-                month === today.getMonth() &&
-                year === today.getFullYear();
-
-            days.push(
-                <span key={`curr-${day}`} className={isToday ? 'active' : ''}>
-                    {day}
-                </span>
-            );
-        }
-
-        // Create rows of 7 days
-        const rows = [];
-        for (let i = 0; i < days.length; i += 7) {
-            rows.push(
-                <div key={`row-${i}`} className="cal-row">
-                    {days.slice(i, i + 7)}
-                </div>
-            );
-        }
-
-        return rows;
-    };
-
-    const getStrengthColor = (strength) => {
-        if (strength >= 80) return '#10b981'; // Green
-        if (strength >= 50) return '#3b82f6'; // Blue
-        if (strength >= 30) return '#f59e0b'; // Orange
-        return '#ef4444'; // Red
+        return cells;
     };
 
     return (
         <PageTransition>
-            <div className="dashboard-page">
-                {/* Hero Section */}
-                <div className="hero-banner">
-                    <div className="hero-content">
-                        <h1>Track your learning progress Easier <br /> With Student Frndly "Sync 'N' go"</h1>
-                        <button className="btn-hero" onClick={() => navigate('/skills')}>Get Started</button>
-                    </div>
-                    <div className="hero-illustration">
-                        <span className="hero-emoji">🚀</span>
-                    </div>
-                </div>
-
-                {loading ? (
-                    <div className="dashboard-loading">
-                        <div className="spinner"></div>
-                        <p>Loading your dashboard...</p>
-                    </div>
-                ) : error ? (
-                    <div className="dashboard-error">
-                        <p>{error}</p>
-                        <button onClick={loadSkills}>Retry</button>
-                    </div>
-                ) : (
-                    <motion.div
-                        className="dashboard-content-grid"
-                        variants={containerVariants}
-                        initial="hidden"
-                        animate="show"
-                    >
-                        {/* Main Interaction Area */}
-                        <div className="dashboard-main-area">
-
-                            {/* Stats Ribbon */}
-                            <motion.div className="stats-ribbon" variants={itemVariants}>
-                                <div className="stat-pill">
-                                    <span className="stat-label">Total Skills</span>
-                                    <span className="stat-value">{totalSkills}</span>
-                                </div>
-                                <div className="stat-pill">
-                                    <span className="stat-label">Avg. Strength</span>
-                                    <span className="stat-value">{averageStrength}%</span>
-                                </div>
-                                <div className="stat-pill">
-                                    <span className="stat-label">Mastered</span>
-                                    <span className="stat-value">{masteredSkills}</span>
-                                </div>
-                                <div className="stat-pill highlight">
-                                    <span className="stat-label">At Risk</span>
-                                    <span className="stat-value warning">{weakSkills}</span>
-                                </div>
-                            </motion.div>
-
-                            {/* Performance Chart Placeholder (Styled as Educactus Chart) */}
-                            <motion.div className="chart-card" variants={itemVariants}>
-                                <div className="card-header">
-                                    <h2>Student Performance</h2>
-                                    <button className="btn-icon">•••</button>
-                                </div>
-                                <div className="chart-area">
-                                    {/* Abstract Visual Representation of a Chart */}
-                                    <div className="chart-visual">
-                                        <div className="chart-line-path"></div>
-                                        <div className="chart-point active">
-                                            <div className="tooltip">
-                                                <span>Average</span>
-                                                <strong>{averageStrength}</strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="chart-months">
-                                        <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span className="active">Jul</span><span>Aug</span>
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            {/* My Skills Grid */}
-                            <div className="skills-section">
-                                <h2>My Skills</h2>
-                                <div className="skills-grid-list">
-                                    {skills.slice(0, 4).map(skill => (
-                                        <motion.div
-                                            key={skill.id}
-                                            className="skill-card-minimal"
-                                            variants={itemVariants}
-                                            whileHover={{ y: -4, boxShadow: "0 10px 20px rgba(0,0,0,0.05)" }}
-                                            onClick={() => navigate(`/skills`)}
-                                        >
-                                            <div className="skill-icon-placeholder" style={{ background: getStrengthColor(skill.currentStrength) + '20', color: getStrengthColor(skill.currentStrength) }}>
-                                                📚
-                                            </div>
-                                            <div className="skill-info">
-                                                <h3>{skill.name}</h3>
-                                                <div className="skill-progress-mini">
-                                                    <div className="progress-bar-bg">
-                                                        <div className="progress-bar-fill" style={{ width: `${skill.currentStrength}%`, background: getStrengthColor(skill.currentStrength) }}></div>
-                                                    </div>
-                                                    <span>{skill.currentStrength}%</span>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                    <motion.button
-                                        className="add-new-card"
-                                        variants={itemVariants}
-                                        onClick={() => navigate('/skills')}
-                                    >
-                                        <span>+</span>
-                                        <p>Add New Skill</p>
-                                    </motion.button>
-                                </div>
-                            </div>
+            <div className="dash">
+                <header className="dash-head">
+                    <p className="dash-date">
+                        {today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        {firstName ? `, ${firstName}` : ''}
+                    </p>
+                    {loading ? (
+                        <div className="dash-skeleton">
+                            <span className="sk sk-h1" /><span className="sk sk-sub" />
                         </div>
+                    ) : (
+                        <>
+                            <h1 className="dash-lead">{summary.lead}</h1>
+                            <p className="dash-sub">{summary.sub}</p>
+                            <div className="dash-actions">
+                                {priority && (
+                                    <button className="btn btn-primary" onClick={() => setActiveTest(priority)}>
+                                        Test {priority.name}
+                                    </button>
+                                )}
+                                <button className="btn btn-ghost" onClick={() => navigate('/skills')}>
+                                    {skills.length ? 'All skills' : 'Add a skill'}
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </header>
 
-                        {/* Right Sidebar */}
-                        <div className="dashboard-right-sidebar">
+                {error ? (
+                    <div className="dash-error">
+                        <p>{error}</p>
+                        <button className="btn btn-ghost" onClick={loadSkills}>Try again</button>
+                    </div>
+                ) : !loading && (
+                    <motion.div className="dash-grid" variants={containerVariants} initial="hidden" animate="show">
+                        <div className="dash-main">
+                            <motion.dl className="dash-stats" variants={itemVariants}>
+                                <div><dt>Skills</dt><dd>{stats.total}</dd></div>
+                                <div><dt>Average strength</dt><dd>{stats.average}<small>%</small></dd></div>
+                                <div><dt>Mastered</dt><dd>{stats.mastered}</dd></div>
+                                <div className={stats.atRisk ? 'is-weak' : ''}><dt>At risk</dt><dd>{stats.atRisk}</dd></div>
+                            </motion.dl>
 
-                            {/* Calendar Widget */}
-                            <motion.div
-                                className="calendar-widget clickable"
-                                variants={itemVariants}
-                                onClick={() => navigate('/calendar')}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                <div className="widget-header">
-                                    <h3>{currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
-                                    <button className="btn-icon" onClick={(e) => { e.stopPropagation(); navigate('/calendar'); }}>→</button>
-                                </div>
-                                <div className="mini-calendar-grid">
-                                    <div className="cal-row header">
-                                        <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+                            {skills.length > 0 && (
+                                <motion.section className="dash-chart" variants={itemVariants} aria-labelledby="chart-title">
+                                    <div className="dash-section-head">
+                                        <h2 id="chart-title">The next two weeks</h2>
+                                        <p>Where each skill lands if you leave it alone.</p>
                                     </div>
-                                    {renderMiniCalendar()}
-                                </div>
-                            </motion.div>
+                                    <DecayChart skills={skills} days={14} />
+                                </motion.section>
+                            )}
 
-                            {/* Recent Activity / Personal Notes */}
-                            <motion.div
-                                className="notes-widget clickable"
-                                variants={itemVariants}
-                                onClick={() => navigate('/calendar')}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                <div className="widget-header">
-                                    <h3>Today's Notes</h3>
+                            <motion.section className="dash-skills" variants={itemVariants} aria-labelledby="skills-title">
+                                <div className="dash-section-head row">
+                                    <h2 id="skills-title">Weakest first</h2>
+                                    {skills.length > 0 && (
+                                        <button className="link" onClick={() => navigate('/skills')}>See all {skills.length}</button>
+                                    )}
                                 </div>
-                                {notes.length === 0 ? (
-                                    <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '14px' }}>
-                                        No notes for today<br />
-                                        <small>Click to add notes</small>
+                                {skills.length === 0 ? (
+                                    <div className="dash-empty">
+                                        <p>No skills yet. Add the first one and come back tomorrow to watch it move.</p>
+                                        <button className="btn btn-primary" onClick={() => navigate('/skills')}>Add a skill</button>
                                     </div>
                                 ) : (
-                                    <ul className="notes-list">
-                                        {notes.slice(0, 3).map((note, index) => (
-                                            <li key={note.id || index}>
-                                                {note.content.length > 60
-                                                    ? note.content.substring(0, 60) + '...'
-                                                    : note.content
-                                                }
-                                            </li>
-                                        ))}
-                                        {notes.length > 3 && (
-                                            <li style={{ color: '#6366f1', fontWeight: '500' }}>+{notes.length - 3} more</li>
-                                        )}
+                                    <ul className="skill-rows">
+                                        {sorted.slice(0, 5).map((skill) => {
+                                            const band = bandOf(skill.currentStrength);
+                                            return (
+                                                <li key={skill.id} className={`skill-row band-${band}`}>
+                                                    <button className="skill-row-main" onClick={() => navigate(`/skills/${skill.id}`)}>
+                                                        <span className="skill-row-name">{skill.name}</span>
+                                                        <span className="skill-row-meta">{skill.category} · practised {relativeDays(skill.daysSinceLastPractice)}</span>
+                                                    </button>
+                                                    <Sparkline skill={skill} />
+                                                    <span className="skill-row-strength">
+                                                        <strong>{Math.round(skill.currentStrength)}%</strong>
+                                                        <em>{bandLabel[band]}</em>
+                                                    </span>
+                                                    <button className="btn btn-small" onClick={() => setActiveTest(skill)}>Test</button>
+                                                </li>
+                                            );
+                                        })}
                                     </ul>
                                 )}
-                            </motion.div>
-
-                            {/* Documents/Files Widget */}
-                            <motion.div className="files-widget" variants={itemVariants}>
-                                <div className="widget-header">
-                                    <h3>Recent Documents</h3>
-                                </div>
-                                <div className="file-item">
-                                    <div className="file-icon pdf">PDF</div>
-                                    <div className="file-info">
-                                        <h4>C2_Proficient.pdf</h4>
-                                        <span>313 KB • 01 Jul, 2026</span>
-                                    </div>
-                                </div>
-                                <div className="file-item">
-                                    <div className="file-icon doc">DOC</div>
-                                    <div className="file-info">
-                                        <h4>Computing SB 1-3</h4>
-                                        <span>478 KB • 03 Jul, 2026</span>
-                                    </div>
-                                </div>
-                            </motion.div>
-
+                            </motion.section>
                         </div>
+
+                        <aside className="dash-aside">
+                            <motion.section className="widget" variants={itemVariants}>
+                                <div className="widget-head">
+                                    <h3>{today.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</h3>
+                                    <button className="link" onClick={() => navigate('/calendar')}>Open calendar</button>
+                                </div>
+                                <div className="mini-cal">
+                                    {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => <span key={i} className="mini-cal-dow">{d}</span>)}
+                                    {renderMiniCalendar()}
+                                </div>
+                            </motion.section>
+
+                            <motion.section className="widget" variants={itemVariants}>
+                                <div className="widget-head">
+                                    <h3>Today&rsquo;s notes</h3>
+                                    <button className="link" onClick={() => navigate('/calendar')}>{notes.length ? 'Edit' : 'Add'}</button>
+                                </div>
+                                {notes.length === 0 ? (
+                                    <p className="widget-empty">Nothing written today.</p>
+                                ) : (
+                                    <ul className="dash-notes">
+                                        {notes.slice(0, 3).map((note, i) => (
+                                            <li key={note.id || i}>{note.content.length > 90 ? note.content.slice(0, 90) + '…' : note.content}</li>
+                                        ))}
+                                        {notes.length > 3 && <li className="more">+{notes.length - 3} more</li>}
+                                    </ul>
+                                )}
+                            </motion.section>
+                        </aside>
                     </motion.div>
+                )}
+
+                {activeTest && (
+                    <QuickTest skill={activeTest} onComplete={(r) => { setActiveTest(null); setTestResults(r); loadSkills(); }} onClose={() => setActiveTest(null)} />
+                )}
+                {testResults && (
+                    <TestResults results={testResults.results} skill={testResults.skill} onClose={() => setTestResults(null)} />
                 )}
             </div>
         </PageTransition>

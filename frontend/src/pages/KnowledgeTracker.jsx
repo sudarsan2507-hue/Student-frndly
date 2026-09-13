@@ -88,56 +88,41 @@ const KnowledgeTracker = () => {
 
     return (
         <div className="knowledge-page">
+            <header className="kt-head">
+                <h1>Knowledge</h1>
+                <p>How well your understanding is holding up, skill by skill.</p>
+            </header>
+
             {/* Header Stats */}
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ background: '#eff6ff', color: '#3b82f6' }}>
-                        <span>🧠</span>
-                    </div>
-                    <div className="stat-content">
-                        <div className="stat-value">{stats.averageStrength}%</div>
-                        <div className="stat-label">Brain Health</div>
-                    </div>
+            <dl className="kt-stats">
+                <div>
+                    <dt>Average strength</dt>
+                    <dd>{stats.averageStrength}<small>%</small></dd>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ background: '#ecfdf5', color: '#10b981' }}>
-                        <span>💪</span>
-                    </div>
-                    <div className="stat-content">
-                        <div className="stat-value">{stats.skillsStrong}</div>
-                        <div className="stat-label">Mastered Skills</div>
-                    </div>
+                <div>
+                    <dt>Mastered</dt>
+                    <dd>{stats.skillsStrong}</dd>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ background: '#fffbeb', color: '#f59e0b' }}>
-                        <span>⚠️</span>
-                    </div>
-                    <div className="stat-content">
-                        <div className="stat-value">{stats.skillsNeedingAttention}</div>
-                        <div className="stat-label">At Risk</div>
-                    </div>
+                <div className={stats.skillsNeedingAttention ? 'is-weak' : ''}>
+                    <dt>Needs attention</dt>
+                    <dd>{stats.skillsNeedingAttention}</dd>
                 </div>
-            </div>
+            </dl>
 
             {/* Insight Cards */}
             <div className="insights-container">
-                <h2 style={{ color: '#1e293b', marginBottom: '24px' }}>Knowledge Analysis</h2>
+                <h2 className="kt-section-title">Skill by skill</h2>
 
                 {skills.map(skill => (
                     <div key={skill.id} className="insight-card">
                         <div className="insight-header">
                             <div className="insight-title">
-                                <h3>{skill.name} <span className="insight-category">{skill.category}</span></h3>
+                                <h3>{skill.name}</h3>
+                                <span className="insight-category">{skill.category}</span>
                             </div>
-                            <div className="insight-badges">
-                                <div className="status-badge" style={{
-                                    backgroundColor: `${skill.statusColor}20`,
-                                    color: skill.statusColor,
-                                    border: `1px solid ${skill.statusColor}40`
-                                }}>
-                                    <span className="status-dot" style={{ background: skill.statusColor, width: 8, height: 8, borderRadius: '50%' }}></span>
-                                    {skill.retentionStatus}
-                                </div>
+                            <div className="status-badge" style={{ color: skill.statusColor }}>
+                                <span className="status-dot" style={{ background: skill.statusColor }} />
+                                {skill.retentionStatus}
                             </div>
                         </div>
 
@@ -173,7 +158,7 @@ const KnowledgeTracker = () => {
                                                 }}
                                             />
                                         ))}
-                                        {(!skill.recentTests || skill.recentTests.length === 0) && <span style={{ fontSize: '12px', color: '#64748b' }}>No data</span>}
+                                        {(!skill.recentTests || skill.recentTests.length === 0) && <span className="test-history-empty">No tests yet</span>}
                                     </div>
                                 </div>
                             </div>
