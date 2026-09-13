@@ -1,0 +1,63 @@
+/* ─── StudyScene: the user's own reference portrait, alive on a soft glow ── */
+.study-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ss-glow {
+    position: absolute;
+    width: min(420px, 90%);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--accent) 0%, transparent 68%);
+    opacity: 0.14;
+    filter: blur(4px);
+}
+
+.ss-portrait-wrap {
+    /* inline-block shrink-wraps to its content by definition — a plain
+       block <div> here stretched to fill .study-scene's full width instead
+       (flex-basis:auto on a block box resolves to "fill available space"),
+       which pushed the portrait to the left edge instead of centering it.
+       fit-content looked like the fix but created a circular dependency
+       against the child's percentage width below — inline-block doesn't. */
+    display: inline-block;
+    position: relative;
+    transform-origin: 50% 60%;
+    transform:
+        rotate(calc(var(--tiltX, 0) * 1.6deg))
+        translate(calc(var(--tiltX, 0) * 5px), calc(var(--tiltY, 0) * -4px));
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ss-portrait {
+    /* vw, not %: a percentage here would resolve against the wrap's own
+       width, which depends on this element's size — circular. Viewport
+       width has no such ambiguity. */
+    width: min(360px, 82vw);
+    height: auto;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+    filter: drop-shadow(0 18px 34px rgba(42, 39, 51, 0.16));
+    animation: ss-breathe 4.4s ease-in-out infinite;
+}
+
+@keyframes ss-breathe {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ss-portrait { animation: none; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .ss-portrait { width: min(280px, 74vw); }
+    .ss-glow { width: min(340px, 84%); }
+}
