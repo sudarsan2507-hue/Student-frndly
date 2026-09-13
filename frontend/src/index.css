@@ -1,46 +1,83 @@
 :root {
-    /* LoadLogic Theme Palette */
-    --bg-primary: #F3F8F3;
-    /* Light Mint/Grey - Main Background */
-    --bg-surface: #FFFFFF;
-    /* White - Cards & Sidebar */
-    --bg-secondary: #F9FAFB;
-    /* Very Light Grey - Secondary Backgrounds */
+    /* ── Surfaces: pale lavender page, white cards ──────────
+       Sampled from the project's own reference template
+       (ui-references/*.mp4) rather than invented. ────────── */
+    --paper: #F1F1FD;
+    --surface: #FFFFFF;
+    --surface-2: #F6F5FC;
+    --ink: #5A51BE;
+    --ink-2: #4E46A6;
+    --ink-3: #443C93;
+    --line: #E7E5F5;
+    --line-strong: #D3D0EC;
 
-    --text-primary: #1A1A1A;
-    /* Almost Black - Headings */
-    --text-secondary: #6B7280;
-    /* Cool Grey - Secondary Text */
-    --text-muted: #9CA3AF;
-    /* Light Grey - Disabled/Placeholder */
+    /* ── Text ──────────────────────────────────────────────── */
+    --text: #1B1830;
+    --text-2: #6B6685;
+    --text-3: #9C97B3;
+    --text-on-ink: #FFFFFF;
+    --text-on-ink-2: #DAD6F3;
 
-    --accent-primary: #1A1A1A;
-    /* Black - Primary Actions/Active State */
-    --accent-hover: #333333;
-    /* Dark Grey - Hover State */
-    --accent-secondary: #E5E7EB;
-    /* Light Grey - Secondary Buttons */
+    /* ── One accent (brand purple, from the reference) ──────── */
+    --accent: #5A51BE;
+    --accent-hover: #443C93;
+    --accent-soft: #ECE9F8;
 
-    --border-color: #E5E7EB;
-    /* Light Grey Border */
-    --border-radius: 16px;
-    /* Modern Rounded Corners */
+    /* ── Secondary action color: the reference visibly splits
+       "brand" (purple: hero, nav, links) from "do this" (teal:
+       primary CTA buttons) — kept as a second, disciplined role
+       rather than decoration. ─────────────────────────────── */
+    --cta: #3F9E85;
+    --cta-hover: #348870;
+    --cta-soft: #E1F3EE;
 
-    --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.02), 0 4px 12px rgba(0, 0, 0, 0.04);
-    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    /* ── Data semantics (retention only — never decoration) ─ */
+    --strong: #2A9D6E;
+    --strong-soft: #E3F4EC;
+    --fading: #D9931B;
+    --fading-soft: #FBF1DE;
+    --weak: #D2453C;
+    --weak-soft: #FBE7E5;
 
-    /* Original Variables Mapped for Backward Compatibility where possible */
-    --primary: var(--accent-primary);
+    /* ── Shape & depth ─────────────────────────────────────── */
+    --r-sm: 8px;
+    --r-md: 12px;
+    --r-lg: 20px;
+    --shadow-1: 0 1px 2px rgba(90, 81, 190, 0.05), 0 1px 0 rgba(90, 81, 190, 0.04);
+    --shadow-2: 0 12px 28px -8px rgba(90, 81, 190, 0.16), 0 2px 6px rgba(90, 81, 190, 0.06);
+    --focus: 0 0 0 3px rgba(90, 81, 190, 0.28);
+
+    /* ── Type ──────────────────────────────────────────────── */
+    --font-ui: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+
+    /* ── Legacy aliases (older page CSS still reads these) ── */
+    --bg-primary: var(--paper);
+    --bg-surface: var(--surface);
+    --bg-secondary: var(--surface-2);
+    --bg-main: var(--paper);
+    --bg-card: var(--surface);
+    --bg-hover: var(--surface-2);
+    --text-primary: var(--text);
+    --text-secondary: var(--text-2);
+    --text-muted: var(--text-3);
+    --text-main: var(--text);
+    --accent-primary: var(--ink);
+    --accent-secondary: var(--surface-2);
+    --primary: var(--accent);
     --primary-hover: var(--accent-hover);
-    --bg-main: var(--bg-primary);
-    --bg-card: var(--bg-surface);
-    --text-main: var(--text-primary);
-    --border-light: var(--border-color);
+    --border-color: var(--line);
+    --border-light: var(--line);
+    --border-radius: var(--r-lg);
+    --shadow-card: var(--shadow-1);
+    --shadow-hover: var(--shadow-2);
+    --sentiment-positive: var(--strong);
+    --sentiment-negative: var(--weak);
+    --sentiment-warning: var(--fading);
 
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-ui);
     line-height: 1.5;
     font-weight: 400;
-
     color-scheme: light;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -48,16 +85,82 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
-body {
-    margin: 0;
-    padding: 0;
-    min-width: 320px;
-    min-height: 100vh;
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+/* ── Palettes: swap the one accent + its interactive-surface family
+   (--ink*) together, so buttons/sidebar-active/focus all follow the pick.
+   Applied via [data-palette] on <html>, set by ThemeContext. Purple is the
+   default (:root above already has it) — these are the alternates. ──── */
+[data-palette="teal"] {
+    --accent: #2E8F79; --accent-hover: #256F5F; --accent-soft: #E1F0EC;
+    --ink: #2E8F79; --ink-2: #297E6C; --ink-3: #256F5F;
+}
+[data-palette="rose"] {
+    --accent: #C4487A; --accent-hover: #9E3A63; --accent-soft: #FBE7EF;
+    --ink: #C4487A; --ink-2: #B04070; --ink-3: #9E3A63;
+}
+[data-palette="amber"] {
+    --accent: #B8791E; --accent-hover: #96631A; --accent-soft: #FBF0DC;
+    --ink: #B8791E; --ink-2: #A66E1C; --ink-3: #96631A;
 }
 
-#root {
-    width: 100%;
+/* ── Dark mode: a deliberate second surface, not an automatic invert.
+   Near-black plum page (the same family the voxel portrait's background
+   already sits on), lifted card surfaces, brightened focus ring. Applied
+   via [data-theme="dark"] on <html>. Accent/--ink stay the same hex as
+   light mode (per whichever [data-palette] is active) — they're already
+   mid-saturation enough to read on both. ──────────────────────────── */
+:root[data-theme="dark"] {
+    --paper: #17151F;
+    --surface: #221F2C;
+    --surface-2: #2B2738;
+    --line: #372F47;
+    --line-strong: #463C59;
+
+    --text: #F1EEF9;
+    --text-2: #B6AFC9;
+    --text-3: #837B99;
+    --text-on-ink: #FFFFFF;
+    --text-on-ink-2: #DCD7F2;
+
+    --strong-soft: rgba(42, 157, 110, 0.16);
+    --fading-soft: rgba(217, 147, 27, 0.16);
+    --weak-soft: rgba(210, 69, 60, 0.18);
+    --cta-soft: rgba(63, 158, 133, 0.16);
+    --accent-soft: rgba(154, 140, 255, 0.16);
+
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.32), 0 1px 0 rgba(0, 0, 0, 0.2);
+    --shadow-2: 0 16px 32px -10px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+    --focus: 0 0 0 3px rgba(154, 140, 255, 0.4);
+
+    color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100dvh;
+    background: var(--paper);
+    color: var(--text);
+    font-family: var(--font-ui);
+}
+
+#root { width: 100%; }
+
+h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    text-wrap: balance;
+    margin: 0;
+}
+
+button, input, select, textarea { font-family: inherit; font-size: inherit; }
+
+:focus-visible { outline: none; box-shadow: var(--focus); }
+
+.tnum, .stat-value, .skill-strength-value, .metric-value, td { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

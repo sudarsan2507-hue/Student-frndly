@@ -1,50 +1,96 @@
-/* App Global Overrides */
-/* Note: Most theme variables are now in index.css */
+/* Global overrides — theme tokens live in index.css */
 
-:root {
-    /* Additional semantic colors if needed */
-    --sentiment-positive: #10B981;
-    --sentiment-negative: #EF4444;
-    --sentiment-warning: #F59E0B;
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+code { font-family: ui-monospace, Menlo, Consolas, monospace; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 5px; border: 2px solid var(--paper); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+::selection { background: var(--accent-soft); color: var(--ink); }
+
+/* ── Shared buttons & links ─────────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: var(--r-md);
+    border: 1px solid transparent;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+    white-space: nowrap;
 }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.btn.btn-primary { background: var(--ink); color: var(--text-on-ink); }
+.btn.btn-primary:hover:not(:disabled) { background: var(--ink-3); }
+.btn.btn-accent { background: var(--accent); color: #fff; }
+.btn.btn-accent:hover:not(:disabled) { background: var(--accent-hover); }
+/* The reference template splits brand-purple (nav, links, hero) from a
+   second "do this" teal for its main CTAs (Get Started, Upgrade Now).
+   Use this specifically for the one or two loudest actions on a page —
+   it is not a second general-purpose accent. */
+.btn.btn-cta { background: var(--cta); color: #fff; }
+.btn.btn-cta:hover:not(:disabled) { background: var(--cta-hover); }
+.btn.btn-ghost { background: var(--surface); color: var(--text); border-color: var(--line-strong); }
+.btn.btn-ghost:hover:not(:disabled) { background: var(--surface-2); }
+.btn.btn-small { padding: 6px 12px; font-size: 13px; border-radius: var(--r-sm); background: var(--surface); border-color: var(--line-strong); color: var(--text); }
+.btn.btn-small:hover:not(:disabled) { background: var(--ink); color: var(--text-on-ink); border-color: var(--ink); }
+.btn.btn-small.btn-primary { background: var(--ink); color: var(--text-on-ink); border-color: var(--ink); }
+.btn.btn-small.btn-primary:hover:not(:disabled) { background: var(--ink-3); border-color: var(--ink-3); }
+.btn.btn-danger { background: var(--surface); color: var(--weak); border-color: var(--line-strong); }
+.btn.btn-danger:hover:not(:disabled) { background: var(--weak-soft); border-color: var(--weak); }
 
-* {
-    margin: 0;
+.link {
+    background: none;
+    border: none;
     padding: 0;
-    box-sizing: border-box;
+    color: var(--accent);
+    font-weight: 500;
+    font-size: 13.5px;
+    cursor: pointer;
+    text-decoration: none;
 }
+.link:hover { text-decoration: underline; text-underline-offset: 3px; }
 
-body {
-    background: var(--bg-primary);
-    color: var(--text-primary);
+/* ── Skeleton shimmer ────────────────────────────────────────── */
+.sk {
+    display: block;
+    border-radius: var(--r-sm);
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--line) 50%, var(--surface-2) 75%);
+    background-size: 200% 100%;
+    animation: sk-shimmer 1.4s ease-in-out infinite;
 }
+@keyframes sk-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-        monospace;
+/* ── Shared loading spinner & retry button (used by pages with no local rule) ── */
+.spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--line);
+    border-top-color: var(--ink);
+    border-radius: 50%;
+    animation: sp-spin 0.7s linear infinite;
 }
+@keyframes sp-spin { to { transform: rotate(360deg); } }
 
-/* Scrollbar Styling */
-::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+.retry-btn {
+    margin-top: 4px;
+    padding: 8px 16px;
+    border-radius: var(--r-sm);
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
 }
-
-::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
-}
-
-::-webkit-scrollbar-thumb {
-    background: var(--bg-hover);
-    border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(167, 139, 250, 0.3);
-}
-
-/* Selection */
-::selection {
-    background: rgba(167, 139, 250, 0.3);
-    color: var(--text-primary);
-}
+.retry-btn:hover { background: var(--surface-2); }
