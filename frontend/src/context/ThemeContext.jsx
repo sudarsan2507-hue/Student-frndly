@@ -25,7 +25,7 @@ const readStored = (key, fallback) => {
 };
 
 export const ThemeProvider = ({ children }) => {
-    const [mode, setMode] = useState(() => readStored(MODE_KEY, 'light'));
+    const [mode, setMode] = useState(() => readStored(MODE_KEY, 'dark'));
     const [palette, setPalette] = useState(() => readStored(PALETTE_KEY, 'purple'));
 
     useEffect(() => {

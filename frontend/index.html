@@ -8,16 +8,19 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <script>
-    // Applied before paint so there's no light->dark flash on load —
+    // Applied before paint so there's no flash of the wrong theme on load —
     // ThemeContext keeps these in sync afterwards. Kept in lockstep with
-    // the localStorage keys in src/context/ThemeContext.jsx.
+    // the localStorage keys AND the default mode in src/context/ThemeContext.jsx —
+    // dark is the default until a visitor picks otherwise.
     (function () {
       try {
-        var mode = localStorage.getItem('sf-theme-mode');
+        var mode = localStorage.getItem('sf-theme-mode') || 'dark';
         var palette = localStorage.getItem('sf-theme-palette');
-        if (mode) document.documentElement.dataset.theme = mode;
+        document.documentElement.dataset.theme = mode;
         if (palette) document.documentElement.dataset.palette = palette;
-      } catch (e) { /* private mode etc. */ }
+      } catch (e) {
+        document.documentElement.dataset.theme = 'dark';
+      }
     })();
   </script>
 </head>
