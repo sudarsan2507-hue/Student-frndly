@@ -85,10 +85,9 @@ const Calendar = () => {
         try {
             await calendarService.scheduleSession(selectedSkillId, selectedDate);
             setShowModal(false);
-            await loadData(); // Refresh events
-            alert('Practice scheduled successfully');
+            await loadData(); // Refresh events — the new entry appearing is the confirmation
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to schedule session');
+            setError(err.response?.data?.message || 'Failed to schedule session');
         } finally {
             setSubmitting(false);
         }
