@@ -1,4 +1,6 @@
 import { revokeToken } from '../services/authService.js';
+import { resetDemoAccountIfNeeded } from '../services/demoResetService.js';
+import logger from '../utils/logger.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const MAX_NAME_LEN = 100;
@@ -131,15 +133,30 @@ class AuthController {
         }
     };
 
-    /** POST /api/auth/logout — revoke the current token server-side */
-    logout = (req, res) => {
+    /**
+     * POST /api/auth/logout — revoke the current token server-side, and if
+     * this was one of the two public demo accounts, wipe and re-seed their
+     * data back to the canonical demo dataset so the next visitor who logs
+     * in sees a fresh, fully-working demo rather than whatever the previous
+     * visitor left behind.
+     */
+    logout = async (req, res) => {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
+        let decoded = null;
         if (token) {
             try {
-                const decoded = this.authService.verifyToken(token);
+                decoded = this.authService.verifyToken(token);
                 if (decoded?.jti) revokeToken(decoded.jti);
             } catch { /* already invalid — nothing to revoke */ }
+        }
+        if (decoded?.email) {
+            try {
+                await resetDemoAccountIfNeeded(this.authService.storage, decoded.email);
+            } catch (err) {
+                // Never fail the logout itself over a demo-reset hiccup
+                logger.error('Demo reset on logout failed', { message: err.message });
+            }
         }
         res.json({ success: true, message: 'Logged out' });
     };
