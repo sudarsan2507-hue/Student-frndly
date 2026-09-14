@@ -11,6 +11,7 @@ import QuickTestService from './services/quickTestService.js';
 import CalendarService from './services/calendarService.js';
 import KnowledgeService from './services/knowledgeService.js';
 import AdminService from './services/adminService.js';
+import MLService from './services/mlService.js';
 
 import AuthController from './controllers/authController.js';
 import SkillController from './controllers/skillController.js';
@@ -29,6 +30,7 @@ import createNoteRoutes from './routes/noteRoutes.js';
 import createAdminRoutes from './routes/adminRoutes.js';
 import createMessageRoutes from './routes/messageRoutes.js';
 import { createRetentionRoutes } from './routes/retentionRoutes.js';
+import createMLRoutes from './routes/mlRoutes.js';
 
 import createAuthMiddleware from './middleware/authMiddleware.js';
 import errorHandler from './middleware/errorHandler.js';
@@ -64,6 +66,7 @@ const quickTestService = new QuickTestService(storage, skillService);
 const calendarService = new CalendarService(storage);
 const knowledgeService = new KnowledgeService(storage, skillService, quickTestService);
 const adminService = new AdminService(storage, skillService);
+const mlService = new MLService(storage, skillService);
 
 // Controllers
 const authController = new AuthController(authService);
@@ -94,6 +97,7 @@ app.use('/api/notes', createNoteRoutes(noteController, authMiddleware));
 app.use('/api/admin', createAdminRoutes(adminController, authMiddleware));
 app.use('/api/messages', createMessageRoutes(storage, authMiddleware));
 app.use('/api/retention', createRetentionRoutes(storage, authMiddleware));
+app.use('/api/ml', createMLRoutes(mlService, storage, authMiddleware));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok', storage: 'SQLite' }));
 app.use(errorHandler);
