@@ -152,7 +152,7 @@ const QuickTest = ({ skill, onComplete, onClose }) => {
                     </button>
                     <button
                         onClick={handleSubmit}
-                        className="btn-primary"
+                        className="btn btn-primary"
                         disabled={submitting || Object.keys(answers).length !== test.questions.length}
                     >
                         {submitting ? 'Submitting...' : 'Submit Test'}
