@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api';
+// Local dev: relative '/api', proxied to localhost:3000 by Vite (see
+// vite.config.js) — no env var needed. Production (Vercel): the static
+// frontend has no backend of its own, so VITE_API_URL must point at the
+// deployed backend's origin (e.g. https://student-frndly-backend.onrender.com).
+// Falls back to '/api' if unset, which is only correct when a backend is
+// actually reachable at that same origin.
+const API_BASE_URL = import.meta.env.VITE_API_URL
+    ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api`
+    : '/api';
 
 /**
  * Axios instance with authentication interceptors
